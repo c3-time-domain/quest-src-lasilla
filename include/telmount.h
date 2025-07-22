@@ -153,6 +153,7 @@ public:
 
     // constructors & destructors
     telmount();
+    telmount(int fake_flag);
     ~telmount();
 
     // accessors

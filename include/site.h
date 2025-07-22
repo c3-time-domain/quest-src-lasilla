@@ -24,6 +24,14 @@
 #define CONF_MOUNT_POINT_TIMEOUT	"MOUNT_POINT_TIMEOUT"
 #define CONF_SITE_MIN_ELEVATION         "SITE_MIN_ELEVATION"
 #define CONF_SITE_SAFE_ELEVATION         "SITE_SAFE_ELEVATION"
+#define FAKE_CONF_SITE_NAME         "FAKE_SITE_NAME"
+#define FAKE_CONF_SITE_LAT          "FAKE_SITE_LAT"
+#define FAKE_CONF_SITE_LON          "FAKE_SITE_LON"
+#define FAKE_CONF_SITE_ELEV         "FAKE_SITE_ELEV"
+#define FAKE_CONF_SITE_DEBUG            "FAKE_SITE_DEBUG"
+#define FAKE_CONF_MOUNT_POINT_TIMEOUT   "FAKE_MOUNT_POINT_TIMEOUT"
+#define FAKE_CONF_SITE_MIN_ELEVATION         "FAKE_SITE_MIN_ELEVATION"
+#define FAKE_CONF_SITE_SAFE_ELEVATION         "FAKE_SITE_SAFE_ELEVATION"
 #define TCS_COM_PORT                     "TCS_COM_PORT"
 #define TCS_FAST_SLEW_ON 		"TCS_FAST_SLEW_ON"
 #define TCS_BIAS_RATE_ON		"TCS_BIAS_RATE_ON"
@@ -92,7 +100,10 @@ private:
 
 public:
     // member functions
+    int configure(char *filename);
+    int configure(char *filename, int fake);
     int configure(configfile &conf);
+    int configure(configfile &conf, int fake);
 };
 
 // Information about the telescope mount
@@ -105,7 +116,10 @@ private:
 
 public:
     // member functions
+    int configure(char *filename);
+    int configure(char *filename, int fake);
     int configure(configfile &conf);
+    int configure(configfile &conf, int fake);
 };
 
 // Information about the telescope control software
@@ -113,8 +127,6 @@ class conf_tcs {
 friend class site;
 private:
 
-   // member functions
-    int configure(configfile &conf);
     int com_port;
     int fast_slew_on;
     int bias_rate_on;
@@ -135,6 +147,11 @@ private:
     double dec_bias_rate;
 
 public:
+   // member functions
+    int configure(char *filename);
+    int configure(char *filename, int fake);
+    int configure(configfile &conf);
+    int configure(configfile &conf, int fake);
  
 };
 
@@ -149,6 +166,7 @@ private:
 public:
 
     int configure(char *filename);	// load config file
+    int configure(char *filename, int fake);	// load config file
 
     // accessors
     const int debug()		{ return site_debug; }

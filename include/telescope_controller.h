@@ -10,6 +10,7 @@
 #ifndef INC_TELESCOPE_CONTROLLER_H
 #define INC_TELESCOPE_CONTROLLER_H
 
+#include <observer.h>
 #include <telescope_drv.h>
 #include <point.h>
 #include <tm_angles.h>

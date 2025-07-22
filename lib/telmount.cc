@@ -58,6 +58,9 @@
 
 //XXXX debugging
 //XXXX
+// fake mount is not needed if questctl.c is called with "-f" argument.
+// However, other code importing telmout might required FAKEMOUNT for
+// testing
 /* #define FAKEMOUNT */
 
 #ifdef FAKEMOUNT
@@ -71,7 +74,11 @@ EXTERN int tel_ctlr_debug;
 using namespace std;
 
 // Constructor
-telmount::telmount() {
+telmount::telmount(){
+  telmount(0);
+}
+
+telmount::telmount(int fake_flag) {
     fail = 0;
 
     if(VERBOSE){cerr << "telmount: initializing " << endl;fflush(stderr);}
@@ -79,7 +86,8 @@ telmount::telmount() {
     char confname[NEAT_FILENAMELEN];
     (void) sprintf(confname,"%s/%s",NEAT_SYSDIR,NEAT_CONFIGFILE);
     if(VERBOSE){cerr << "telmount: loading file " << confname << endl;fflush(stderr);}
-    if (!tm_site.configure(confname)) {
+    fprintf(stderr,"telmount: configuring from file %s with fake_flag %d\n",confname,fake_flag);
+    if (!tm_site.configure(confname,fake_flag)) {
         fprintf(stderr, "telmount: error loading configuration file %s\n",
                confname);
         fail = 1;

@@ -24,6 +24,8 @@
 #define EXTERN extern
 #endif
 
+#include <observer.h>
+
 #define NO_NOP /* don't need to send NOPs just to get status */
 
 /* EXTERN int telescope_open(void); */

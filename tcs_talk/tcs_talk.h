@@ -24,6 +24,6 @@
 #include        <netdb.h>               /* getservbyname(), gethostbyname() */
 #include        <termios.h>
 #include	<sys/poll.h>
-#define FAKE_CONTROLLER
+//#define FAKE_CONTROLLER
 
 

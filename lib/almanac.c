@@ -385,13 +385,15 @@ LEGALITIES:
 #include <stdarg.h>
 #include <string.h>
 #include <questctl.h>
-#define FAKE_TELESCOPE
+#include <almanac.h>
 
+#if 0
 #define TWILIGHT_ELEV -12.0 /* deg below horizon of sun for end of twilight */
 
 /* default observatory and timezone */
 
 #define DEFAULT_OBSCODE 'e' /* ESO at La Silla */
+#define FAKE_OBSCODE 'f' /* ESO at La Silla  + 12 h longitude*/
 /* #define DEFAULT_OBSCODE 'p' old default was p for palomar */
 
 /* a couple of the system-dependent magic numbers are defined here */
@@ -474,6 +476,7 @@ struct date_time
 	float s;
    };
 
+#endif
 FILE *sclogfl = NULL;
 
 void oprntf(char *fmt, ...)
@@ -1082,39 +1085,41 @@ void load_site(longit,lat,stdz,use_dst,
 
         /* if site_name is preset to "DEFAULT", then use DEFAULT_OBSCODEfor the site obs_code */
 
-        if(strstr(site_name,"DEFAULT")!=NULL){
-          obs_code[0]=DEFAULT_OBSCODE;
-        }
+    if(strstr(site_name,"DEFAULT")!=NULL){
+      obs_code[0]=DEFAULT_OBSCODE;
+    }
+    else if(strstr(site_name,"Fake")!=NULL || strstr(site_name,"FAKE")!=NULL || strstr(site_name,"fake")!=NULL){
+      obs_code[0]=FAKE_OBSCODE;
+    }
 
-        /* otherwise choose from a list */
+    /* otherwise choose from a list */
 
-        else{
+    else{
 
+      printf("*SELECT SITE* - Enter single-character code:\n");
+      printf("   n .. NEW SITE, prompts for all parameters.\n");
+      printf("   x .. exit without change (current: %s)\n",site_name);
+      printf("   k .. Kitt Peak [MDM Obs.]\n");
+      printf("   s .. Shattuck Observatory, Dartmouth College, Hanover NH\n"); 
+  /*      printf("   K .. Keele Observatory, Keele, Staffordshire, England\n");  */
+      printf("   a .. Anglo-Australian Telelescope, Siding Spring\n");
+      printf("   e .. European Southern Obs, La Silla\n");
+  /*	printf("   b .. Black Moshannon Obs., Penn State U.\n");  */
+      printf("   d .. Dominion Astrophysical Obs., Victoria, BC\n");
+  /*	printf("   H .. Harvard College Observatory, Cambridge, MA\n");  */
+      printf("   h .. Mt. Hopkins, AZ (MMT, FLWO)\n");
+      printf("   l .. Lick Observatory\n");
+      printf("   m .. Mauna Kea, Hawaii\n");
+      printf("   p .. Palomar Observatory\n");
+  /*      printf("   P .. Observatoire du Pic du Midi, Pyrenees\n");  */
+      printf("   r .. Roque de los Muchachos, La Palma, Canary Is.\n");
+      printf("   t .. Cerro Tololo \n");
+      printf("   T .. McDonald Observatory, Mt. Locke, Texas\n");
+          printf("   z .. South African Astronomical Observatory, Sutherland\n");
+      printf("Your answer --> ");
 
-	printf("*SELECT SITE* - Enter single-character code:\n");
-	printf("   n .. NEW SITE, prompts for all parameters.\n");
-	printf("   x .. exit without change (current: %s)\n",site_name);
-	printf("   k .. Kitt Peak [MDM Obs.]\n");
-	printf("   s .. Shattuck Observatory, Dartmouth College, Hanover NH\n"); 
-/*      printf("   K .. Keele Observatory, Keele, Staffordshire, England\n");  */
-	printf("   a .. Anglo-Australian Telelescope, Siding Spring\n");
-	printf("   e .. European Southern Obs, La Silla\n");
-/*	printf("   b .. Black Moshannon Obs., Penn State U.\n");  */
-	printf("   d .. Dominion Astrophysical Obs., Victoria, BC\n");
-/*	printf("   H .. Harvard College Observatory, Cambridge, MA\n");  */
-	printf("   h .. Mt. Hopkins, AZ (MMT, FLWO)\n");
-	printf("   l .. Lick Observatory\n");
-	printf("   m .. Mauna Kea, Hawaii\n");
-	printf("   p .. Palomar Observatory\n");
-/*      printf("   P .. Observatoire du Pic du Midi, Pyrenees\n");  */
-	printf("   r .. Roque de los Muchachos, La Palma, Canary Is.\n");
-	printf("   t .. Cerro Tololo \n");
-	printf("   T .. McDonald Observatory, Mt. Locke, Texas\n");
-        printf("   z .. South African Astronomical Observatory, Sutherland\n");
-	printf("Your answer --> ");
-
-	scanf("%s",obs_code);
-        }
+      scanf("%s",obs_code);
+    }
 
 	if(obs_code[0] == 'x') {
 		printf("No action taken.  Current site = %s.\n",site_name);
@@ -1169,23 +1174,24 @@ void load_site(longit,lat,stdz,use_dst,
 		strcpy(zone_name, "Chilean");
 		*zabr = 'C';
 		*use_dst = -1;
-#ifdef FAKE_TELESCOPE
-                strcpy(site_name, "Fake Site");
-                strcpy(zone_name, "Fake Location");
-                *zabr = 'F';
-                *longit = 0.0;
-#else
 		*longit = 4.7153;
-#endif
 		*lat = -29.257;
 		*stdz = 4.;
 		*elevsea = 2347.;
 		*elev = 2347.; /* for ocean horizon, not Andes! */
-#ifdef FAKE_TELESCOPE
-		printf("\n\n** Will use daylght time, Chilean date conventions. \n\n");
-#else
-		printf("\n\n** Will use daylght time, Fake Site conventions. \n\n");
-#endif
+		printf("\n\n** Will use daylght time, Chilean conventions. \n\n");
+    }
+	else if (obs_code[0] == 'f') {
+		strcpy(site_name, "Fake Site (La Silla + 12 h)");
+		strcpy(zone_name, "Fake");
+		*zabr = 'F';
+		*use_dst = -1;
+        *longit = 16.7153;
+		*lat = -29.257;
+		*stdz = 16.;
+		*elevsea = 2347.;
+		*elev = 2347.; /* for ocean horizon, not Andes! */
+		printf("\n\n** Will use daylght time, Chilean +12 h date conventions. \n\n");
 	}
 	else if (obs_code[0] == 'b') {
 		strcpy(site_name, "Black Moshannon Observatory");
@@ -1357,7 +1363,7 @@ void load_site(longit,lat,stdz,use_dst,
 		printf("(Other options would require new code). Answer: --> ");
 		getshort(use_dst,-100,100,errprompt);
 	}
-		else {
+	else {
 		printf("UNKNOWN SITE '%c' -- left as %s. Note input is case-sensitive.\n",
 			      obs_code[0],site_name);
 	}
@@ -6314,7 +6320,7 @@ int set_to_jd(date, use_dst, enter_ut, night_date, stdz, jd)
 }
 
 
-int get_almanac(Almanac *almanac)
+int get_almanac(Almanac *almanac, char *site_name)
 {
 	struct date_time date/*,dateback*/;
 	/*struct coord ttime;*/
@@ -6360,7 +6366,7 @@ int get_almanac(Almanac *almanac)
 	*/
 
 
-	char site_name[45];  /* initialized later with strcpy for portability */
+	//char site_name[45];  /* initialized later with strcpy for portability */
 	char zabr = 'M';
 	char zone_name[25]; /* this too */
 	short use_dst = 0;
@@ -6372,12 +6378,8 @@ int get_almanac(Almanac *almanac)
 	double stdz = 7.;
 
 
-        strcpy(site_name,"DEFAULT");
-
-	printf("#load_site: site_name is %s\n",site_name);
 	load_site(&longit,&lat,&stdz,&use_dst,zone_name,&zabr,
 			&elevsea,&elev,&horiz,site_name);
-	printf("#load_site: site_name is %s\n",site_name);
 
 #if SYS_CLOCK_OK == 1
 

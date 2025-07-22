@@ -54,6 +54,7 @@
 #include <neattime.h>
 #include <dms.h>
 //#include <neatstat.h>
+#include <observer.h>
 #include <site.h>
 #include <neatconf.h>
 #include <telescope_controller.h>
@@ -80,7 +81,7 @@
 #define RESPONSE_FILE "questctl.response"
 #define FAKE_PID_FILE "fake_questctl.pid"
 #define FAKE_RESPONSE_FILE "fake_questctl.response"
-#define FAKE_STATUS_FILE "/home/observer/fake_tcs.status"
+#define FAKE_STATUS_FILE "fake_tcs.status"
 #define QUESTPORT 3911
 #define STATUS_CHECK_INTERVAL 10.0 /*seconds between telescope status checks*/
 #define COMMAND_LENGTH NEAT_LINELEN
@@ -196,7 +197,7 @@
 //#define FAKE_SUNDOWN
 
 
-int fake_mount=0;
+int fake_site_flag=0;
 double my_fake_focus=0;
 double my_fake_ra=0.0;
 double my_fake_ha=0.0;
@@ -262,6 +263,17 @@ int main(int argc, char *argv[])
     double lst; 
 //    double current_ra, current_dec;
 
+    if(argc==2&&strstr(argv[1],"h")!=NULL){
+       print_help();
+       do_exit(0);
+    }
+    else if(argc==2&&strstr(argv[1],"f")!=NULL){
+       fake_site_flag=1;
+    }
+    else if(argc==2&&strstr(argv[1],"d")!=NULL){
+       wait_for_dome=1; 
+    }
+
     if(install_signal_handlers()!=0){
         fprintf(stderr,"questctl: could not install signal handlers. Exitting\n");
         fflush(stderr);
@@ -279,26 +291,13 @@ int main(int argc, char *argv[])
        do_exit(-1);
     }
 
-    if(get_almanac(&almanac)!=0){
+    if(get_almanac(&almanac,site_info.name())!=0){
        fprintf(stderr,"questctl: could not not initialize almanac\n");
        do_exit(-1);
     }
 
     *command=0;
     *reply=0;
-    fake_mount=0;
-
-    if(argc==2&&strstr(argv[1],"h")!=NULL){
-       print_help();
-       do_exit(0);
-    }
-    else if(argc==2&&strstr(argv[1],"f")!=NULL){
-       fake_mount=1;
-    }
-    else if(argc==2&&strstr(argv[1],"d")!=NULL){
-       wait_for_dome=1; 
-    }
-
     if(record_pid()!=0){
        fprintf(stderr,"could not record pid\n");
        exit(-1);
@@ -308,8 +307,8 @@ int main(int argc, char *argv[])
     fprintf(stderr,"ut_offset is %12.6f\n", UT_OFFSET);
     fprintf(stderr,"current ut is %12.6f\n", get_date_time(&tm));
 	     
-    if(fake_mount){
-	fprintf(stderr,"%s: telescope operation will be simulated\n",argv[0]);
+    if(fake_site_flag){
+	    fprintf(stderr,"%s: telescope operation will be simulated\n",argv[0]);
         fflush(stderr);
         getlst(&lst);
         my_fake_ha=0.0;
@@ -318,7 +317,6 @@ int main(int argc, char *argv[])
         my_fake_status=TRACKING_OFF_STATE;
         strcpy(fake_com1_status,"E");   
         record_fake_status(my_fake_dome_status);
-        
     }
     else{
 
@@ -379,7 +377,7 @@ int main(int argc, char *argv[])
       // keep trying to initialize mount. Stop trying at sunrise */
 
       while(t==NULL){ 
-        t = new telmount();
+        t = new telmount(fake_site_flag);
         if ((t == NULL) || t->fail)
         {
 	   fprintf(stderr,"%s: %9.6f mount initialization failed\n",
@@ -415,9 +413,7 @@ int main(int argc, char *argv[])
     done=0;
     while(!done)
     {
-
-
-      if(fake_mount&&my_fake_status==TRACKING_ON_STATE){
+      if(fake_site_flag&&my_fake_status==TRACKING_ON_STATE){
           double now = neat_gettime_utc();
           my_fake_ha=my_fake_ha+
                         (now-my_fake_stop_time)/3600.0;
@@ -652,17 +648,23 @@ int init_site(site *mon_site)
 {
 
     char confname[NEAT_FILENAMELEN];
-    (void) sprintf(confname,"%s/%s",NEAT_SYSDIR,NEAT_CONFIGFILE);
-    if (!(mon_site->configure(confname)))
+    sprintf(confname,"%s/%s",NEAT_SYSDIR,NEAT_CONFIGFILE);
+
+    if(verbose){
+       fprintf(stderr,"init_site: configuring from file %s with fake_flag %d\n",confname, fake_site_flag);
+    }
+
+    if (!(mon_site->configure(confname,fake_site_flag)))
     {
-        fprintf(stderr,"init_site: error loading configuration file %s\n",
-            confname);
+        fprintf(stderr,"init_site: error loading configuration file %s with fake flag %d\n",
+            confname, fake_site_flag);
         
         return(-1);
     }
     else {
         if(verbose){
            fprintf(stderr,"init_site:site configured successfully\n");
+           fprintf(stderr,"site name: %s\n",mon_site->name());
            fprintf(stderr,"site longitude: %10.6f\n",mon_site->lon());
            fprintf(stderr,"site latitude: %10.6f\n",mon_site->lat());
            fprintf(stderr,"site min_elevation: %10.6f\n",mon_site->min_elevation());
@@ -676,7 +678,7 @@ int init_site(site *mon_site)
 int do_exit(int code)
 {
   
-   if(!fake_mount){
+   if(!fake_site_flag){
        if(telescope!=NULL)delete telescope;
        if(t!=NULL)delete t;
    }
@@ -689,7 +691,7 @@ int get_tracking_status(int *tracking_status)
 {
    fprintf(stderr,"get_tracking_status: reading telescope tracking status\n");
 
-   if(fake_mount){
+   if(fake_site_flag){
      *tracking_status=my_fake_status;
    }
    else { 
@@ -710,7 +712,7 @@ int get_position(double *ra, double *dec, double *ut)
    fprintf(stderr,"get_postion: reading telescope position\n");
    double lst;
 
-   if(fake_mount){
+   if(fake_site_flag){
       if(getlst(&lst)!=0){  
         fprintf(stderr,"check_status: could not read lst\n");
         return(-1);
@@ -738,7 +740,7 @@ int stop_telescope()
 
    fprintf(stderr,"stop_telescope: stopping telescope\n");
 
-   if(fake_mount){
+   if(fake_site_flag){
      my_fake_status=0;
    }
    else {
@@ -761,7 +763,7 @@ int stow_telescope()
 
    fprintf(stderr,"stow_telescope: stowing telescope\n");
 
-   if(fake_mount){
+   if(fake_site_flag){
      fprintf(stderr,"stow_telescope: fake stowing telescope. Sleeping 10 seconds...\n");
      sleep(10);
      fprintf(stderr,"stow_telescope: fake stowing telescope. Done sleeping 10 seconds.\n");
@@ -829,7 +831,7 @@ int check_status(Almanac *almanac, int *stop_code)
    int dome_status,tracking_status;
    char dome_status_string[1024];
 
-   if(fake_mount){*stop_code=RUN_CODE;return(0);}
+   if(fake_site_flag){*stop_code=RUN_CODE;return(0);}
    // check if sun is up
 
    if(sunup(almanac)==SUNUP){
@@ -1183,7 +1185,7 @@ int process_command(char *command, char *reply, int socfd)
                 tracking_status=-1;
             }
 
-            if(fake_mount){
+            if(fake_site_flag){
               if(tracking_status<0){
                 sprintf(reply,"%s %d fake operations\n",COMMAND_ERROR_REPLY,tracking_status);
               }
@@ -1246,7 +1248,7 @@ int process_command(char *command, char *reply, int socfd)
             }
         }
         else{
-          if(fake_mount){
+          if(fake_site_flag){
             fake_interp(command,reply);
             if(write_loop(socfd,(u_char *)reply,strlen(reply))==-1){
                 fprintf(stderr,
@@ -1377,7 +1379,7 @@ int get_filter(telescope_controller *telescope, char *filter_string)
         unsigned short i;
         char filter[NUM_FILTER_INDICES*FILTER_NAME_LENGTH];
 
-        if (fake_mount){
+        if (fake_site_flag){
            sprintf(filter_string,"filter: FAKE");
            return(0);
         }
@@ -1422,7 +1424,7 @@ int get_weather(telescope_controller *telescope, char *weather_string)
 
     struct weather_data cur_wea_stat;
 
-    if(fake_mount){
+    if(fake_site_flag){
       cur_wea_stat.temp=0.0;
       cur_wea_stat.humidity=0.0;
       cur_wea_stat.wind_speed=0.0,
@@ -1455,7 +1457,7 @@ int slavedome(telescope_controller *telescope, char *dome_status_string)
 {
     int status;
 
-    if(fake_mount){
+    if(fake_site_flag){
       cerr << "fake slavedome command" << endl;
       status=0;
     }
@@ -1484,7 +1486,7 @@ int get_domestatus(telescope_controller *telescope, char *status_str)
 {
     int status;
     
-    if(fake_mount){
+    if(fake_site_flag){
       cerr << "fake domestatus command" << endl;
       status=my_fake_dome_status;
     }
@@ -1527,19 +1529,10 @@ int getlst(double *lst)
 
     mon_site=site_info;
     (void) sprintf(confname,"%s/%s",NEAT_SYSDIR,NEAT_CONFIGFILE);
-#if 0
-    if (!mon_site.configure(confname))
-    {
-        fprintf(stderr,"getlst: error loading configuration file %s\n",
-            confname);
-        
-        return(-1);
-    }
-#endif
     double now = neat_gettime_utc();
     *lst = uxt_lst(now,mon_site.lon());
     
-    if(fake_mount){
+    if(fake_site_flag){
       cerr << "fake lst command" << endl;
       fflush(stderr);
       *lst=*lst+FAKE_LST_OFFSET;
@@ -1557,7 +1550,7 @@ int getlst(double *lst)
 int setfocus(telescope_controller *telescope,double f)
 {
 
-    if(fake_mount){
+    if(fake_site_flag){
        my_fake_focus=f;
        cerr << "fake setfocus command" << endl;
        cerr << "focus offset changed to " << f << "mm" << endl;
@@ -1579,7 +1572,7 @@ int setfocus(telescope_controller *telescope,double f)
 int getfocus(telescope_controller *telescope, double *f)
 {
 
-   if(fake_mount){
+   if(fake_site_flag){
      *f=my_fake_focus;
      cerr << "fake getfocus command" << endl;
      cerr << "current focus setting is " << *f << endl;
@@ -1605,13 +1598,13 @@ int domectl(telescope_controller *t,int state){
 
 #ifdef NO_DOME_OPEN
     // can't open dome unless command came from command_code
-    if(!fake_mount&&state==DOME_OPEN_STATE&&command_code!=OPEN_CODE){
+    if(!fake_site_flag&&state==DOME_OPEN_STATE&&command_code!=OPEN_CODE){
        cerr << "domectl: dome open not allowed " << endl;
        return(1);
     }
 #endif
 
-    if(fake_mount){
+    if(fake_site_flag){
       cerr << "fake domectl command" << endl;
       sleep(DOME_DELAY);
       status=0;
@@ -1640,7 +1633,7 @@ int domectl(telescope_controller *t,int state){
     }
 
     if(state==DOME_OPEN_STATE){
-       if(fake_mount){
+       if(fake_site_flag){
          cerr << "fake open_dome command" << endl;
          status=0;
          my_fake_dome_status=DOME_OPEN_STATUS;
@@ -1651,7 +1644,7 @@ int domectl(telescope_controller *t,int state){
        }
     }
     else if (state==DOME_CLOSED_STATE){
-       if(fake_mount){
+       if(fake_site_flag){
          cerr << "fake open dome command" << endl;
          status=0;
          my_fake_dome_status=DOME_CLOSED_STATUS;
@@ -1727,7 +1720,7 @@ int record_pid()
 {
    FILE *output;
    
-   if(fake_mount){
+   if(fake_site_flag){
      output=fopen(FAKE_PID_FILE,"w");
      if(output==NULL){
         fprintf(stderr,"record_pid: could not open file %s for writing\n",FAKE_PID_FILE);
@@ -1842,7 +1835,7 @@ int record_response(char *string)
    FILE *output;
    struct timeval t;
    
-   if(fake_mount){
+   if(fake_site_flag){
      output=fopen(FAKE_RESPONSE_FILE,"w");
      if(output==NULL){
          fprintf(stderr,"record_response: could not open file %s for writing\n",FAKE_RESPONSE_FILE);

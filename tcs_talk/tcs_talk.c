@@ -9,7 +9,7 @@
 #include "telescope_drv.h"
 #include "errno.h"
 
-#define FAKE_CONTROLLER
+//#define FAKE_CONTROLLER
 
 /* IO permissions when opening the serial port for reading and writing */
 #define READ_OPS O_RDONLY
@@ -48,8 +48,8 @@ int fd_serial_in,fd_serial_out; /* file descriptors for the serial port, one for
                                              
 unsigned short *serial_buffer; /* buffer for reading and writing to the serial port */
 
-int verbose=0;
-int verbose1=0;
+int verbose=1;
+int verbose1=1;
 
 
 /*************************************************************************/

@@ -18,7 +18,7 @@ TCS_TALK_SOURCES= tcs_talk.c
 TCS_TALK_OBJECTS= $(TCS_TALK_SOURCES:.c=.o)
 
 
-OBJECTS = $
+OBJECTS = *.o
 
 tcs_talk: $(TCS_TALK_OBJECTS)   
 	$(CC) $(CFLAGS) -o $@ $(TCS_TALK_OBJECTS) $(LIBS) 
