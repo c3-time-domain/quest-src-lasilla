@@ -12,14 +12,23 @@ make clean
 make all
 make install
 cd $root/util 
-cp *csh $root/bin
+cp * $root/bin
 # these perl files are probably obsolete
 cp *pl $root/bin
+cd $root/tcs_talk
+make clean
+make all
+make install
 cd $root
 cd weather_srv
 make clean
 make all
 make install
+cd status_srv
+make clean
+make all
+make install
+
 
 #
 

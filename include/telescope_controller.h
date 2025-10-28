@@ -30,10 +30,20 @@ typedef unsigned int useconds_t;
 #define FOCUS_STEPS0 -136000
 #define FOCUS_MM_TO_STEPS 84100.0
 
-/* perl script for getting weather info */
-#define WEATHER_CLIENT "/home/observer/quest-src-lasilla/util/weather_client.pl"
-/* temporary file for storing weather info */
-#define WEATHER_FILE "/tmp/weather.tmp"
+/* environment variable names for weather_client and weather_file */
+#define WEATHER_CLIENT "WEATHER_CLIENT"
+#define WEATHER_FILE "WEATHER_FILE"
+
+/* environment variable names for TCS program name and status file */
+#define TCS_PROG_NAME "TCS_PROG_NAME"
+#define TCS_STATUS_FILE "TCS_STATUS_FILE"
+
+/* defaults if environment variables are not defined */
+#define DEFAULT_WEATHER_CLIENT "/home/observer/bin/weather_client.pl"
+#define DEFAULT_WEATHER_FILE "/home/observer/logs/weather.tmp"
+#define DEFAULT_TCS_PROG_NAME "/home/observer/bin/tcs_talk_client.pl"
+#define DEFAULT_TCS_STATUS_FILE "/home/observer/logs/tcs.status"
+
 
 /* ACU_STATUS_FILTER_ID_BYTE
    This is the  byte of the ACU status string that gives the filter index, as set up
@@ -148,7 +158,11 @@ enum TELESCOPE_CMDS {
 enum FCS_LIMITS { MIN_FCS = 0, MAX_FCS = 1000000 };
 */
 
-enum FCS_LIMITS { MIN_FCS = -250000, MAX_FCS = -100500 };
+//enum FCS_LIMITS { MIN_FCS = -250000, MAX_FCS = -100500 }
+
+//current best focus is -12000 (2025 Sep 4). Set limits
+// at +/- 50,000 from best focus
+enum FCS_LIMITS { MIN_FCS = -52000, MAX_FCS = 38000 };
 
 // Enums follow the Telescope Interface Spec, see that document for more
 // information. Specifically the STATUS REQUEST (sec 8.7) and BINARY
@@ -286,8 +300,9 @@ class telescope_controller {
 	public:
 		enum TC_RESPONSES { TC_NACK = 0, TC_ACK = 1, TC_FAIL = -1};
 		telescope_controller();
-		telescope_controller(char*);
-		telescope_controller(int,int);
+		telescope_controller(char*, double );
+		telescope_controller(int,int,char*);
+		telescope_controller(int,int,char*, double);
 		~telescope_controller();
 		int take_control();
 		int fault_status();
@@ -332,11 +347,16 @@ class telescope_controller {
 		int check_tel_response(char*);
 		void setcoords(const double&, const double&);
 		int com_port;
+        char *server_name;
 		int point_timeout;
 		int convert_focus_to_steps(double f_mm);
 		double convert_focus_to_mm(int f_steps);
+        int ut_offset; // hours added to actual UT for simulated obs
+        char *tcs_prog_name;
+        char *tcs_status_file;
 
 	private:
+		void init_telescope_controller(int,int,char*, double);
 		char* class_name;
 		bool has_control;
 		void dummy_load_weather(struct weather_data*);
@@ -345,6 +365,8 @@ class telescope_controller {
 		double pos_lon;
 		double pos_lat;
 		azel_ang cur_azel;
+        char *weather_client;
+        char *weather_file;
 //		double rate;
 };
 

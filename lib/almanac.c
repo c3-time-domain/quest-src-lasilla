@@ -1093,9 +1093,9 @@ void load_site(longit,lat,stdz,use_dst,
     }
 
     /* otherwise choose from a list */
+#if 0
 
     else{
-
       printf("*SELECT SITE* - Enter single-character code:\n");
       printf("   n .. NEW SITE, prompts for all parameters.\n");
       printf("   x .. exit without change (current: %s)\n",site_name);
@@ -1120,7 +1120,7 @@ void load_site(longit,lat,stdz,use_dst,
 
       scanf("%s",obs_code);
     }
-
+#endif
 	if(obs_code[0] == 'x') {
 		printf("No action taken.  Current site = %s.\n",site_name);
 		return;
@@ -1182,16 +1182,16 @@ void load_site(longit,lat,stdz,use_dst,
 		printf("\n\n** Will use daylght time, Chilean conventions. \n\n");
     }
 	else if (obs_code[0] == 'f') {
-		strcpy(site_name, "Fake Site (La Silla + 12 h)");
-		strcpy(zone_name, "Fake");
-		*zabr = 'F';
+		strcpy(site_name, "Fake ESO, Cerro La Silla");
+		strcpy(zone_name, "Chilean");
+		*zabr = 'C';
 		*use_dst = -1;
-        *longit = 16.7153;
+		*longit = 4.7153;
 		*lat = -29.257;
-		*stdz = 16.;
+		*stdz = 4.;
 		*elevsea = 2347.;
 		*elev = 2347.; /* for ocean horizon, not Andes! */
-		printf("\n\n** Will use daylght time, Chilean +12 h date conventions. \n\n");
+		printf("\n\n** Will use daylght time, Chilean conventions. \n\n");
 	}
 	else if (obs_code[0] == 'b') {
 		strcpy(site_name, "Black Moshannon Observatory");
@@ -2932,8 +2932,8 @@ void find_dst_bounds(yr,stdz,use_dst,jdb,jde)
 	else if (use_dst == -1) {  /* Chilean, for CTIO, etc.  */
 	   /* off daylight 2nd Sun in March, onto daylight 2nd Sun in October */
 		trial.y = yr;
-		trial.mo = 3;
-		trial.d = 8;  /* earliest possible 2nd Sunday */
+		trial.mo = 1;
+		trial.d = 1;  /* earliest possible 2nd Sunday */
 		trial.h = 2;
 		trial.mn = 0;
 		trial.s = 0;
@@ -2944,8 +2944,8 @@ void find_dst_bounds(yr,stdz,use_dst,jdb,jde)
 		*jdb = date_to_jd(trial) + (stdz - 1.)/24.;
 			/* note jdb is beginning of STANDARD time in south,
 				hence use stdz - 1. */
-		trial.mo = 10;
-		trial.d = 8;
+		trial.mo = 9 ;
+		trial.d = 7;
 		while(day_of_week(date_to_jd(trial)) != 6) {
 			trial.d++;
 		}

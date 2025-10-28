@@ -75,13 +75,29 @@ using namespace std;
 
 // Constructor
 telmount::telmount(){
-  telmount(0);
+  //telmount(0);
+  init_telmount(0,0,0.0);
 }
 
-telmount::telmount(int fake_flag) {
+telmount::telmount(int fake_flag, double fake_ut_offset) {
+    int dome_flag = 0; // Do not override dome. No ops when dome is closed
+    init_telmount(fake_flag,dome_flag, fake_ut_offset);
+}
+
+telmount::telmount(int fake_flag, int dome_flag, double fake_ut_offset) {
+    init_telmount(fake_flag,dome_flag, fake_ut_offset);
+}
+   
+void telmount::init_telmount(int fake_flag, int dome_flag, double fake_ut_offset) {
     fail = 0;
 
-    if(VERBOSE){cerr << "telmount: initializing " << endl;fflush(stderr);}
+    if(VERBOSE){
+      fprintf(stderr,"telmount: initializing  with fake_flag %d, dome_flag %d, and ut_offset %7.3f\n",fake_flag,dome_flag,fake_ut_offset);
+      fflush(stderr);
+    }
+
+    ut_offset = fake_ut_offset;
+    override_dome = dome_flag;
     // load configuration file
     char confname[NEAT_FILENAMELEN];
     (void) sprintf(confname,"%s/%s",NEAT_SYSDIR,NEAT_CONFIGFILE);
@@ -126,7 +142,7 @@ telmount::telmount(int fake_flag) {
          cerr << "telmount: initializing telescope_controller " << endl;
          fflush(stderr);
     }
-    tcu = new telescope_controller(tm_site.com_port(),tm_site.mount_point_timeout());
+    tcu = new telescope_controller(tm_site.com_port(),tm_site.mount_point_timeout(),tm_site.server_name(), ut_offset);
     if (tcu == NULL) {
         cerr << "telmount constructor FAILED" << endl;
         fprintf(stderr, "telmount constructor FAILED\n");
@@ -485,7 +501,7 @@ telmount::getpos(double *ra_p, double *dec_p, double *uxtime_p) {
 
 #ifdef FAKEMOUNT
     // faked for testing without mount hardware
-    *uxtime_p=neat_gettime_utc();
+    *uxtime_p=neat_gettime_utc(ut_offset);
     strcpy(ra_c,FAKEMOUNT_ra_curr);
     strcpy(dec_c, FAKEMOUNT_dec_curr);
     sscanf(ra_c,"%lf",ra_p);
@@ -506,7 +522,7 @@ telmount::getpos(double *ra_p, double *dec_p, double *uxtime_p) {
                "telmount::getpos_rd: unable to get point status from TCU\n");
         return (-1);
     }
-    *uxtime_p=neat_gettime_utc();
+    *uxtime_p=neat_gettime_utc(ut_offset);
     *ra_p=current_position.ra;
     *dec_p=current_position.dec;
 
@@ -624,7 +640,7 @@ telmount::point(double ra, double dec, pointmode mode) {
         return -1;
     }
 
-    //double uxtime = neat_gettime_utc();
+    //double uxtime = neat_gettime_utc(ut_offset);
     //double mjd = uxt_mjd(uxtime);
 
     // precess RA/DEC to epoch of date
@@ -672,7 +688,7 @@ telmount::focus(double fset) {
     }
 
     double t1, t2;
-    t1 = neat_gettime_utc();
+    t1 = neat_gettime_utc(ut_offset);
 
     fprintf(stderr, "telmount::focus: asked to set focus to %f\n", fset);
     if (fset < MIN_FCS || fset > MAX_FCS) {
@@ -728,7 +744,7 @@ telmount::wait_ontarget(int dome_check_flag) {
     char my_name[24] = "telmount::wait_ontarget";
 
     int status = TELESCOPE_SLEWING;
-    t1 = neat_gettime_utc();
+    t1 = neat_gettime_utc(ut_offset);
  
     while (status == TELESCOPE_SLEWING || status == TELESCOPE_DOME_MOVING) {
 	int fault_stat = 0, dome_shutter_stat = 0;
@@ -770,16 +786,16 @@ telmount::wait_ontarget(int dome_check_flag) {
         status = tcu->tracking_status();
         if (status == -1) {
             fprintf(stderr, "%s: unable to communicate with TCU\n", my_name);
-	    report_fault(fault_stat, dome_shutter_stat);
+	        report_fault(fault_stat, dome_shutter_stat);
             return -2;
         }
 
         // check to see if point timeout has been reached and we have not
         // yet reach our point
-        t2=neat_gettime_utc();
+        t2=neat_gettime_utc(ut_offset);
         if (t2-t1 > point_timeout) {
             fprintf(stderr, "%s: telescope not reaching position\n", my_name);
-	    report_fault(fault_stat, dome_shutter_stat);
+	        report_fault(fault_stat, dome_shutter_stat);
             return -1;
         }
 	sleep(1);
@@ -803,26 +819,26 @@ telmount::do_move_rd(double ra, double dec, pointmode mode) {
     char my_name[21] = "telmount::do_move_rd";
 
     if (fail) {
-	report_fault(no_fault, ds_stat_unknown);
+	    report_fault(no_fault, ds_stat_unknown);
         return -1;
     }
     
     // first check for any faults that may have happened.
     int fault_stat = 0;
     if ((fault_stat = tcu->fault_status()) < 0) {
-	fprintf(stderr, "%s: tcu faulted with value %d\n", my_name, fault_stat);
-	report_fault(fault_stat, ds_stat_unknown);
-	return -1;
+        fprintf(stderr, "%s: tcu faulted with value %d\n", my_name, fault_stat);
+        report_fault(fault_stat, ds_stat_unknown);
+        return -1;
     }
     fprintf(stderr, "%s: tcu fault status is %d\n", my_name, fault_stat);
 
     // now check to make sure the dome is open or mismatched (closed is bad
     // unknown is bad)
     int dome_stat = tcu->dome_shutter_status();
-    if (dome_stat <= 0) {
-	fprintf(stderr, "%s: dome fault, status is %d\n", my_name, dome_stat);
-	report_fault(fault_stat, dome_stat);
-	return -1;
+    if (dome_stat <= 0 && override_dome ==0 ) {
+	  fprintf(stderr, "%s: dome fault, status is %d\n", my_name, dome_stat);
+	  report_fault(fault_stat, dome_stat);
+	  return -1;
     }
     fprintf(stderr, "%s: dome status: %d\n", my_name, dome_stat);
 
@@ -840,7 +856,7 @@ telmount::do_move_rd(double ra, double dec, pointmode mode) {
       fprintf(stderr,"telmount::do_move_rd: new elevation close to dec horizon. Moving to zenith first\n");
     }
 
-    double move_start_time = neat_gettime_utc();
+    double move_start_time = neat_gettime_utc(ut_offset);
 
 
     if(check_status==1){
@@ -869,14 +885,14 @@ telmount::do_move_rd(double ra, double dec, pointmode mode) {
     int status = tcu->point(rda,mode);
     if (status != 0) {
         fprintf(stderr, "telmount::do_move_rd: unable to point telescope\n");
-	report_fault(fault_stat, dome_stat);
+	    report_fault(fault_stat, dome_stat);
         return -1;
     } else {
         fprintf(stderr, "telmount::do_move_rd: point accepted\n");
     }
 
     fprintf(stderr, "telmount::do_move_rd: elapsed time: %f\n",
-           (neat_gettime_utc() - move_start_time));
+           (neat_gettime_utc(ut_offset) - move_start_time));
 
     
     fprintf(stderr, "telmount::do_move_rd: waiting for target acquisition\n");
@@ -909,7 +925,7 @@ telmount::do_move_rd(double ra, double dec, pointmode mode) {
 	   dome_pos_stat.domep);
     tm_dome_az = dome_pos_stat.domep;
 
-    double now = neat_gettime_utc();
+    double now = neat_gettime_utc(ut_offset);
     double movetime = now - move_start_time;
     fprintf(stderr, "telmount::do_move_rd: move completed in %f seconds\n",
            movetime);
@@ -1042,17 +1058,19 @@ double calc_time_move(double ra1, double dec1,
 void telmount::report_fault(int fault_status, int dome_status) {
     char my_name[23] = "telmount::report_fault";
     char fault_name[27] = "critical telescope failure";
+
     // check either of the provided fault values to see if
     // they indicate that the communication between us and the
     // the telescope control computer has died.
+
     if (fault_status == comm_fault || dome_status == d_comm_failed) {
 	// come failed or something else drastic, chances are we
 	// can't communicate with the tcu/acu so just report
 	// what we can
-	fprintf(stderr,
-	       "%s: %s, fault status: %d, dome_status: %d\n", my_name,
-	       fault_name, fault_status, dome_status);
-	return;
+        fprintf(stderr,
+               "%s: %s, fault status: %d, dome_status: %d\n", my_name,
+               fault_name, fault_status, dome_status);
+        return;
     }
 
     // otherwise comm is fine and we can provide a full report
@@ -1098,17 +1116,17 @@ void telmount::report_fault(int fault_status, int dome_status) {
     struct tcu_status cur_tel_stat;
     struct weather_data cur_wea_data;
     if (tcu->stat_req(0,cur_tel_stat) < 0) {
-	fprintf(stderr, "%s: failed retrieving telescope status\n",
-	       my_name);
-	return;
-    }
-    cur_wea_data = tcu->get_weather_data();
-    if (cur_wea_data.temp <= -999.0) {
-	fprintf(stderr, "%s: failed retrieving weather data\n",
-	       my_name);
-	return;
+        fprintf(stderr, "%s: failed retrieving telescope status\n",
+               my_name);
+        return;
     }
 
+    cur_wea_data = tcu->get_weather_data();
+    if (cur_wea_data.temp <= -999.0) {
+        fprintf(stderr, "%s: failed retrieving weather data\n",
+               my_name);
+        return;
+    }
     
     // build strings for mode, acu and ccu status
     char mode_string[255] = "";
@@ -1116,8 +1134,8 @@ void telmount::report_fault(int fault_status, int dome_status) {
     int i = 0;
     char tmp_str[16];
     for (i=0;i<tot_modes;i++) {
-	sprintf(tmp_str, "%d:%d ", i, cur_tel_stat.mode[i]);
-	strcat(mode_string, tmp_str);
+        sprintf(tmp_str, "%d:%d ", i, cur_tel_stat.mode[i]);
+        strcat(mode_string, tmp_str);
     }
 
 

@@ -15,7 +15,7 @@ if ( ! $?LS4_ROOT ) then
 endif
 source $LS4_ROOT/.login
 
-set TCS_FILE = "$LS4_ROOT/quest-src-lasilla/tcs.status"
+set TCS_FILE = "$LS4_ROOT/logs/tcs.status"
 if ( $FAKE_TELESCOPE ) then
   set PID_FILE = "$LS4_ROOT/logs/fake_questctl.pid"
 else

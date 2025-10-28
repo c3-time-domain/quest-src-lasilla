@@ -6,7 +6,7 @@
 #
 set TEST = 0
 set asmWs = "134.171.80.34"
-set temp_file = "/tmp/ntt_dome_status.tmp"
+set weather_file = /tmp/weather.tmp
 set dome_file = "dome.last"
 set meteo_file = "meteo.last"
 set DATE_TO_TIME_PROGRAM = "date_to_time"
@@ -23,12 +23,12 @@ cd $LS4_ROOT/logs
 # down latest dome states from ftp site
 #
 if ( -e $dome_file ) rm $dome_file
-wget --timeout 3 -N ftp://$asmWs/pub/$dome_file >& $temp_file
+wget --timeout 3 -N ftp://$asmWs/pub/$dome_file >& $weather_file
 #
 # down latest weather status from ftp site
 #
 if ( -e $meteo_file ) rm $meteo_file
-wget --timeout 3 -N ftp://$asmWs/pub/$meteo_file >>& $temp_file
+wget --timeout 3 -N ftp://$asmWs/pub/$meteo_file >>& $weather_file
 #
 # if meteo file exists, read temperature, humidity, pressure, windspeed
 #

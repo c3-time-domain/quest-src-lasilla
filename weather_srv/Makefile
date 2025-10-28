@@ -11,7 +11,8 @@ LIBS= -lm -lc
 PROGRAMS= date_to_time  parse_meteo
 
 #
-SCRIPTS = *.pl ntt_dome_status
+SCRIPTS = ntt_dome_status  start_weather_server  weather_client.pl  weather_srv.pl
+
 
 all: $(PROGRAMS) $(SCRIPTS)
 

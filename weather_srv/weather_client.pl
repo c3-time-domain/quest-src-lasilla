@@ -92,17 +92,18 @@ while(<STDIN>) {
         connect_weather_command_socket;
 	sel_write($tsel);
 	$ret = sel_read($tsel);
-	printf STDERR "client: $_\n";
+	#printf STDERR "client: $_\n";
 	if (/^x$/ || /^shutdown/) {
 	    last;
 	}
 	if (defined($ret)) {
-	    printf STDERR "client: ret=$ret\n";
+	    #printf STDERR "client: ret=$ret\n";
+	    printf STDERR "$ret";
 	} else {
 	    printf STDERR "client: ret is undefined\n";
 	}
        close($comsock);
 }
-printf STDERR "closing socket\n";
+#printf STDERR "closing socket\n";
 
 

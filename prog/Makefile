@@ -15,7 +15,7 @@ QUESTCAMLIB=		../lib/libquestcam.a
 QUESTPROGRAMS = questctl sunup weather getfocus setfocus \
 	mountctl opendome_raw closedome slavedome domestatus \
 	slavewindscr getfilter disable_telescope enable_telescope \
-	telescope_status stow_telescope get_riset  test
+	telescope_status stow_telescope get_riset  
 
 QUESTSCRIPTS = start_questctl stop_questctl
 
@@ -72,9 +72,9 @@ getfilter: getfilter.o $(QUESTCAMLIB)
 		../lib/telescope_drv.o $(QUESTCAMLIB)  $(LDFLAGS) -lstdc++  -lm
 
 domestatus: domestatus.o $(QUESTCAMLIB)
-	$(CCC) $(CCFLAGS) -o $@ \
+	$(CCC) $(CCFLAGS) $(LDFLAGS) -o $@ \
 		domestatus.o \
-		../lib/telescope_drv.o $(QUESTCAMLIB)  $(LDFLAGS) -lstdc++   -lm
+		$(QUESTCAMLIB)  $(LDFLAGS) -lstdc++   -lm
 
 telescope_status: telescope_status.o $(QUESTCAMLIB)
 	$(CCC) $(CCFLAGS) -o $@ \
@@ -86,9 +86,9 @@ weather: weather.o $(QUESTCAMLIB)
 		weather.o  \
 		../lib/telescope_drv.o  $(QUESTCAMLIB)  $(LDFLAGS) -lstdc++ -lm
 
-opendome_raw: opendome.o $(QUESTCAMLIB)
+opendome_raw: opendome_raw.o $(QUESTCAMLIB)
 	$(CCC) $(CCFLAGS) -o $@ \
-		opendome.o\
+		opendome_raw.o\
 		../lib/telescope_drv.o  $(QUESTCAMLIB)  $(LDFLAGS) -lstdc++   -lm
 
 closedome: closedome.o $(QUESTCAMLIB)

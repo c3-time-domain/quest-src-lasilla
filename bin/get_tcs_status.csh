@@ -11,13 +11,15 @@ if ( ! $?LS4_ROOT ) then
    exit -1
 endif
 source $LS4_ROOT/.login
-
-set TCS_FILE = "$LS4_ROOT/quest-src-lasilla/tcs.status"
+    
+set TCS_FILE = "$LS4_ROOT/logs/tcs.status"
 set PID_FILE = "$LS4_ROOT/logs/questctl.pid"
 set TEMP_FILE = "/tmp/check_telescope_status.tmp"
 alias check_questctl 'ps -aef | grep -e "`cat $PID_FILE`" | grep -ve "grep" | wc -l'
 
-if (! `check_questctl`) then
+if (-e $PID_FILE ) then
+  if ( ! `check_questctl`) then
      $LS4_ROOT/bin/domestatus >&  $TEMP_FILE
+  endif
 endif
 cat $TCS_FILE | cut -c 1-125

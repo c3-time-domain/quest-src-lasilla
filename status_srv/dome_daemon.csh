@@ -32,7 +32,7 @@ if ( ! $?LS4_ROOT ) then
 endif
 
 if ( $FAKE_TELESOPE == 1 ) then
-  set TCS_FILE = "$LS4_ROOT/quest-src-lasilla/fake_tcs.status"
+  set TCS_FILE = "$LS4_ROOT/logs/fake_tcs.status"
   set PID_FILE = "$LS4_ROOT/logs/fake_questctl.pid"
   set COMMAND_FILE = "$LS4_ROOT/logs/fake_dome_daemon.command"
   set SIGNAL_FILE =  "$LS4_ROOT/logs/fake_questctl.signal"
@@ -40,7 +40,7 @@ if ( $FAKE_TELESOPE == 1 ) then
   set temp_file = "fake_dome_daemon.tmp"
   set MAIN_LOOP_DELAY = 10
 else
-  set TCS_FILE = "$LS4_ROOT/quest-src-lasilla/tcs.status"
+  set TCS_FILE = "$LS4_ROOT/logs/tcs.status"
   set PID_FILE = "$LS4_ROOT/logs/questctl.pid"
   set COMMAND_FILE = "$LS4_ROOT/bin/dome_daemon.command"
   set SIGNAL_FILE =  "$LS4_ROOT/logs/questctl.signal"

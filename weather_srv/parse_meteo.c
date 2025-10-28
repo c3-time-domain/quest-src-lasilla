@@ -72,6 +72,10 @@ main(int argc, char **argv)
     wind_sp=get_median(w1,w2,w3);
     wind_dir=get_median(wd1,wd2,wd3);
 
+    temp=t1;
+    wind_sp=w1;
+    wind_dir=wd1;
+
     fprintf(stdout,"%5.1f %5.1f %5.1f %5.1f %5.1f %5.1f\n",
 		temp,hum,wind_sp,wind_dir,dewp,press);
 

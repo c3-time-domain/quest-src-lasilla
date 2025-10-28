@@ -327,6 +327,7 @@ int
 conf_tcs::configure(configfile &conf, int fake)
 {
 
+    if (!conf.lookup(TCS_SERVER_NAME, server_name) ) return 0;
     if (!conf.lookup(TCS_COM_PORT, &com_port) ) return 0;
     if(com_port<1 || com_port > 2){
         fprintf(stderr,"com port inconf file must be 1 or 2. It's not set to %d\n",com_port);

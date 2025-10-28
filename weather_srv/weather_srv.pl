@@ -157,7 +157,7 @@ while(1) {
 # 	    printf STDERR "COMMAND (%d)   ==> $msg\n",$cmd_time;  
 	    
 	    if (($msg =~ /^s\0/) || ($msg =~ /^status\0/) ) {
-		$ret = docmd("ntt_dome_status");
+		$ret = docmd("$LS4_ROOT/bin/ntt_dome_status");
 		sel_write($tsel,$ret);
 	    } elsif (($msg =~ /^x\0/) || ($msg =~ /^shutdown\0/) ) {
 		shutDown();

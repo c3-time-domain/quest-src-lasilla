@@ -24,7 +24,7 @@
 #include <syslog.h>
 #include <string.h>
 #include <iostream>
-#define VERBOSE 0
+#define VERBOSE 1
 
 #include <telescope_drv.h>
 #include <quest_sockets.h>
@@ -37,16 +37,17 @@ using namespace std;
  * sends it to the TCS computer over a serial line. It then reads the continuous telemetry
  * stream coming back from the TCS computer over the same serial line and writes the latest 
  * telemetry record to standard output. In the system call, the standard output is
- * redirected to the TCS_STATUS_FILE which records all commands and telemetry responses.
+ * redirected to the tcs_status_file which records all commands and telemetry responses.
  */
-int telescope_io(char *cmd, char *response_string) {
+//int telescope_io(char *cmd, char *response_string, char *server_name, int server_port) {
+int telescope_io(char *cmd, char *response_string, char *tcs_prog_name, char *tcs_status_file){
     FILE *input;
     char string[1024];
     int n;
 
-#if 1
-    if(send_socket_command(cmd, response_string, TCS_STATUS_SRV_HOST,
-                        TCS_STATUS_SRV_PORT, TCS_STATUS_SRV_TIMEOUT_SEC)<0){
+#if 0
+    if(send_socket_command(cmd, response_string, server_name,
+                        server_port, TCS_STATUS_SRV_TIMEOUT_SEC)<0){
        cerr << "telescope_io: unable to send command to TCS server" << endl;
        return(-1);
     }
@@ -70,7 +71,7 @@ int telescope_io(char *cmd, char *response_string) {
     /* send command to TCS (unless it is the STS command. These are unneccessary because the TCS
        continuously sends back status) */
 
-    sprintf(string,"echo %s | %s > %s\n",cmd,TCS_PROGRAM,TCS_STATUS_FILE);
+    sprintf(string,"echo %s | %s > %s\n",cmd,tcs_prog_name,tcs_status_file);
 
     if(VERBOSE){
        cerr << "telescope_io: system call : \n" << string << endl;
@@ -82,22 +83,22 @@ int telescope_io(char *cmd, char *response_string) {
        cerr << "telescope_io: NOCOMMAND, skipping tcs call " << endl;
   }   
 
-    /* open TCS_STATUS_FILE for reading */
+    /* open tcs_status_file for reading */
 
     if(VERBOSE){
-       cerr << "telescope_io: opening file " << TCS_STATUS_FILE << endl;
+       cerr << "telescope_io: opening file " << tcs_status_file << endl;
        fflush(stderr);
     }
 
-    input=fopen(TCS_STATUS_FILE,"r");
+    input=fopen(tcs_status_file,"r");
     if(input==NULL){
-      fprintf(stderr,"telescope_io: %s command: %s can't open TCS_STATUS_FILE %s\n",TCS_ERROR_CODE,cmd,TCS_STATUS_FILE);
-      sprintf(response_string,"%s command: %s can't open TCS_STATUS_FILE %s\n",TCS_ERROR_CODE,cmd, TCS_STATUS_FILE);
+      fprintf(stderr,"telescope_io: %s command: %s can't open tcs_status_file %s\n",TCS_ERROR_CODE,cmd,tcs_status_file);
+      sprintf(response_string,"%s command: %s can't open tcs_status_file %s\n",TCS_ERROR_CODE,cmd, tcs_status_file);
       return(-1);
     }
 
     if(VERBOSE){
-       cerr << "telescope_io: reading file " << TCS_STATUS_FILE << endl;
+       cerr << "telescope_io: reading file " << tcs_status_file << endl;
        fflush(stderr);
     }
     /* read the first line of the file. There should only be one line, 
@@ -106,8 +107,8 @@ int telescope_io(char *cmd, char *response_string) {
     if(fgets(response_string,TEL_RESPONSE_SIZE,input)==NULL){
       fclose(input);
       fprintf(stderr,"telescope_io: %s command: %s can't read file %s\n",
-							TCS_ERROR_CODE,cmd,TCS_STATUS_FILE);
-      sprintf(response_string,"%s command: %s can't read file %s\n",TCS_ERROR_CODE,cmd, TCS_STATUS_FILE);
+							TCS_ERROR_CODE,cmd,tcs_status_file);
+      sprintf(response_string,"%s command: %s can't read file %s\n",TCS_ERROR_CODE,cmd, tcs_status_file);
       return(-1);
     }
 
