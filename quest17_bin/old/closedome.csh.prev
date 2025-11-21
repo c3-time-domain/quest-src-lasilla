@@ -7,11 +7,17 @@
 #
 # DLR 2009 Aug 10
 #
-set COMMAND_FILE = "/home/observer/status_srv/dome_daemon.command"
-set PID_FILE = "/home/observer/logs/questctl.pid"
+if ( ! $?LS4_ROOT ) then
+   echo "LS4_ROOT is not a defined environment variable"
+   exit -1
+endif
+source $LS4_ROOT/.login
+
+set COMMAND_FILE = "$LS4_ROOT/status_srv/dome_daemon.command"
+set PID_FILE = "$LS4_ROOT/logs/questctl.pid"
 set VERBOSE = 0
 set CLOSEDOME_SIGNAL = 10
-alias closedome_direct  '/home/observer/bin/closedome'
+alias closedome_direct  '$LS4_ROOT/bin/closedome'
 
 set questctl_on = 0
 set dome_daemon_on = 0
@@ -31,11 +37,11 @@ if ( $l == 1 ) then
    set dome_daemon_on = 1
 endif
 
-echo "CLOSE " `date -u ` " " `date +"%s"` >! $COMMAND_FILE
+echo "CLOSE " `date -u ` >! $COMMAND_FILE
 
 if ( ! $questctl_on ) then
    echo "WARNING: questctl not running. Sending direct commands to TCS"
-   /home/observer/bin/closedome |& tail -n 1
+   $LS4_ROOT/bin/closedome |& tail -n 1
    echo "done"
 else 
    if ( ! $dome_daemon_on ) then

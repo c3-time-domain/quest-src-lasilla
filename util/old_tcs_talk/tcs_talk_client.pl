@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 
-# Test client for tcs_talk_yale.pl
+# Test client for quest_yale.pl
 
 use Env;
 use Cwd;
@@ -11,17 +11,18 @@ use IO::Select;
 
 sub get_config_info {
     
-    my $cfgfile = "/home/observer/questlib/tcs_talk.cfg";
-    my $tcs_talkcfg = new FileHandle "<  $cfgfile"
+#    my $cfgfile = "$PALOMARDIR/config/questsrv-daytime.cfg";
+    my $cfgfile = "$LS4_ROOT/questlib/questsrv-daytime.cfg";
+    my $questcfg = new FileHandle "<  $cfgfile"
 	or die "Could not open $cfgfile: $!";
     my $nmatch = 0;
-    while(<$tcs_talkcfg>) {
-	if(/^TCS_TALK_COMMAND_PORT\s+(\S+)/) {
-	    $tcs_talk_command_port = $1;
+    while(<$questcfg>) {
+	if(/^QUEST_COMMAND_PORT\s+(\S+)/) {
+	    $quest_command_port = $1;
 	    $nmatch++;
         } 
-	if(/^TCS_TALK_HOSTNAME\s+(\S+)/) {
-	    $tcs_talk_hostname = $1;
+	if(/^QUEST_HOSTNAME\s+(\S+)/) {
+	    $quest_hostname = $1;
 	    $nmatch++;
         }
 	if(/^TIMEOUT\s+(\S+)/) {
@@ -29,16 +30,16 @@ sub get_config_info {
 	    $nmatch++;
         }
     }
-    if (!defined($tcs_talk_command_port)) {
-	printf STDERR "Couldn't find TCS_TALK_COMMAND_PORT in $cfgfile\n";
+    if (!defined($quest_command_port)) {
+	printf STDERR "Couldn't find QUEST_COMMAND_PORT in $cfgfile\n";
     }
-    if (!defined($tcs_talk_hostname)) {
-	printf STDERR "Couldn't find TCS_TALK_HOSTNAME in $cfgfile\n";
+    if (!defined($quest_hostname)) {
+	printf STDERR "Couldn't find QUEST_HOSTNAME in $cfgfile\n";
     }
     if (!defined($timeout)) {
 	printf STDERR "Couldn't find TIMEOUT in $cfgfile\n";
     }
-    $tcs_talkcfg->close or die "Couldn't close cfgfile:$!";
+    $questcfg->close or die "Couldn't close cfgfile:$!";
 	
     if ($nmatch != 3) {
 	die "Ports undefined";
@@ -47,14 +48,14 @@ sub get_config_info {
 }
   
 
-sub connect_tcs_talk_command_socket {
+sub connect_quest_command_socket {
 
     $comsock = new IO::Socket::INET (
-                                 PeerAddr =>	$tcs_talk_hostname,
-                                 PeerPort =>	$tcs_talk_command_port,
+                                 PeerAddr =>	$quest_hostname,
+                                 PeerPort =>	$quest_command_port,
                                  Proto =>	'tcp',
                                 );
-    die "Could not create tcs_talk_command_socket: $!\n" unless $comsock;
+    die "Could not create quest_command_socket: $!\n" unless $comsock;
     $tsel = new IO::Select();
     $tsel->add($comsock);
 
@@ -84,17 +85,16 @@ sub sel_read {
 
 get_config_info;
 if ($#ARGV == 0) {
-    $tcs_talk_hostname = $ARGV[0];
-    printf STDERR "Using host $tcs_talk_hostname\n";
+    $quest_hostname = $ARGV[0];
+    printf STDERR "Using host $quest_hostname\n";
 }
 
 
 while(<STDIN>) {
-        connect_tcs_talk_command_socket;
-	#printf STDERR "client: $_\n";
+        connect_quest_command_socket;
 	sel_write($tsel);
 	$ret = sel_read($tsel);
-	#printf STDERR "client: $_\n";
+#	printf STDERR "client: $_\n";
 	if (defined($ret)) {
 	    printf "$ret\n";
 	} else {

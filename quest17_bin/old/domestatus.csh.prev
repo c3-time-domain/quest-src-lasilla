@@ -9,8 +9,18 @@
 #
 # DLR 2009 Aug 10
 #
-set TCS_FILE = "/home/observer/quest-src-lasilla/tcs.status"
-set PID_FILE = "/home/observer/logs/questctl.pid"
+if ( ! $?LS4_ROOT ) then
+   echo "LS4_ROOT is not a defined environment variable"
+   exit -1
+endif
+source $LS4_ROOT/.login
+
+set TCS_FILE = "$LS4_ROOT/logs/tcs.status"
+if ( $FAKE_TELESCOPE ) then
+  set PID_FILE = "$LS4_ROOT/logs/fake_questctl.pid"
+else
+  set PID_FILE = "$LS4_ROOT/logs/questctl.pid"
+endif
 set VERBOSE = 0
 
 if ( ! -e $PID_FILE ) then
@@ -21,8 +31,8 @@ if ( ! -e $TCS_FILE ) then
 endif
 
 set questctl_pid = `cat $PID_FILE`
-alias check_questctl 'ps -aef | grep -e " `cat $PID_FILE` " | grep -ve "grep" | wc -l'
-alias domestatus_direct '/home/observer/bin/domestatus'
+alias check_questctl 'ps -aef | grep -e "`cat $PID_FILE`" | grep -ve "grep" | wc -l'
+alias domestatus_direct '$LS4_ROOT/bin/domestatus'
 alias domestatus 'set l0 = `cat $TCS_FILE | cut -c 1-125`; if ( $#l0 >= 15 ) echo $l0[$#l0] ; if ($#l0 < 15) echo -1'
 set temp_file = "/tmp/dome_status.tmp"
 

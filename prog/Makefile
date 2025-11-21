@@ -86,9 +86,9 @@ weather: weather.o $(QUESTCAMLIB)
 		weather.o  \
 		../lib/telescope_drv.o  $(QUESTCAMLIB)  $(LDFLAGS) -lstdc++ -lm
 
-opendome_raw: opendome.o $(QUESTCAMLIB)
+opendome_raw: opendome_raw.o $(QUESTCAMLIB)
 	$(CCC) $(CCFLAGS) -o $@ \
-		opendome.o\
+		opendome_raw.o\
 		../lib/telescope_drv.o  $(QUESTCAMLIB)  $(LDFLAGS) -lstdc++   -lm
 
 closedome: closedome.o $(QUESTCAMLIB)
