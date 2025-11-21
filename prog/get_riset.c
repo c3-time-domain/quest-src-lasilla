@@ -222,19 +222,21 @@ SITE_SAFE_ELEVATION 30.0       # point to zenith first if pointing this close to
     time_t clock;
 
     char str[128];
+    double fake_ut_offset = 0.0;
 
-    if (argc != 3)
+    if (argc != 3 && argc != 4)
     {
-	fprintf(stderr,"Usage: %s ra dec\n",argv[0]);
+	fprintf(stderr,"Usage: %s ra dec [fake_ut_offset (hours)] \n",argv[0]);
 	exit(1);
     }
 
     sscanf(argv[1],"%lf",&ra);
     sscanf(argv[2],"%lf",&dec);
+    if (argc == 4) sscanf(argv[3],"%lf", &fake_ut_offset);
 
     new_riset (ra, dec, lat, dis, &lstr, &lsts, &azr, &azs, &har, &has, &status);
 
-    uxt = neat_gettime_utc();
+    uxt = neat_gettime_utc(fake_ut_offset);
     lst = uxt_lst(uxt,lon);
     uxts = (lsts - lst)*3600.0 + uxt;
     uxtr = (lstr - lst)*3600.0 + uxt;

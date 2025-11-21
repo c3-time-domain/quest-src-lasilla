@@ -10,16 +10,16 @@ LDFLAGS=	-L/usr/lib -lm
 
 QUESTCAMLIB=		../lib/libquestcam.a
 
-SHELLS  = update_filter_log start_quest
+#SHELLS  = update_filter_log start_questctl
 
 QUESTPROGRAMS = questctl sunup weather getfocus setfocus \
 	mountctl opendome_raw closedome slavedome domestatus \
 	slavewindscr getfilter disable_telescope enable_telescope \
-	telescope_status stow_telescope get_riset 
+	telescope_status stow_telescope get_riset  
 
-QUESTSCRIPT = start_questctl
+QUESTSCRIPTS = start_questctl stop_questctl
 
-INSTALLDIR = /home/observer/bin
+INSTALLDIR = ../bin
 #INSTALLDIR = /Users/daver/yale/lasilla/quest-src-lasilla/bin
 
 all: $(QUESTPROGRAMS) $(QUESTSCRIPTS)
@@ -72,9 +72,9 @@ getfilter: getfilter.o $(QUESTCAMLIB)
 		../lib/telescope_drv.o $(QUESTCAMLIB)  $(LDFLAGS) -lstdc++  -lm
 
 domestatus: domestatus.o $(QUESTCAMLIB)
-	$(CCC) $(CCFLAGS) -o $@ \
+	$(CCC) $(CCFLAGS) $(LDFLAGS) -o $@ \
 		domestatus.o \
-		../lib/telescope_drv.o $(QUESTCAMLIB)  $(LDFLAGS) -lstdc++   -lm
+		$(QUESTCAMLIB)  $(LDFLAGS) -lstdc++   -lm
 
 telescope_status: telescope_status.o $(QUESTCAMLIB)
 	$(CCC) $(CCFLAGS) -o $@ \
@@ -120,6 +120,11 @@ slavewindscr: slavewindscr.o $(QUESTCAMLIB)
 	$(CCC) $(CCFLAGS) -o $@ \
 		slavewindscr.o  \
 		../lib/telescope_drv.o $(QUESTCAMLIB)  $(LDFLAGS) -lstdc++   -lm
+
+test: test.o
+	$(CCC) $(CCFLAGS) -o $@ \
+		test.o  \
+		$(LDFLAGS) -lstdc++   -lm
 
 
 .cc.o:

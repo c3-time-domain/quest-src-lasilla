@@ -138,6 +138,7 @@ private:
     telescope_controller* tcu;
     int debug;
     int point_timeout;		/* timeout for moving to a single position */
+    int override_dome;      /* if > 0, allow ops when dome is closed */
 
     int do_move_rd(double ra, double dec, pointmode mode);
     				/* make a position move */
@@ -150,10 +151,14 @@ public:
     int fail;
     int harris_fd;
     double current_ra, current_dec;
+    double ut_offset=0;    /* offset added to real UT for simulated obs */
 
     // constructors & destructors
     telmount();
+    telmount(int fake_flag, double fake_ut_offset);
+    telmount(int fake_flag, int dome_flag, double fake_ut_offget);
     ~telmount();
+    void init_telmount(int fake_flag, int dome_flag, double fake_ut_offget);
 
     // accessors
     site tmsite()	{return tm_site;}

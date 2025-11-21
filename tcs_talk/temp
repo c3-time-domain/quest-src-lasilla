@@ -1,0 +1,7 @@
+INSTALLDIR= ../bin
+
+install: all
+
+	cp $(PROGRAMS) $(SCRIPTS)  $(INSTALLDIR)
+
+

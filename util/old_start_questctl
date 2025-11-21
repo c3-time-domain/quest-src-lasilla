@@ -5,14 +5,14 @@
 # start up the questctl program, which controls the telescope at night
 # after the dome is opened. But wait until sun is not up to launch it
 #
-set COMMAND_FILE = "/home/observer/status_srv/dome_daemon.command"
+set COMMAND_FILE = "$LS4_ROOT/status_srv/dome_daemon.command"
 #
 # seconds to wait after sundown before starting questctl and dome_daemon.
 # This gives time for darks
 set STARTUP_DELAY = 1800
 #
 # slay questctl, dome_daemon, and status_daemon
-cd /home/observer/logs    
+cd $LS4_ROOT/logs    
 set l = `ps -aef | grep "questctl" | grep -ve "grep" | grep -ve "start"`
 if ( $#l > 0 ) then
    kill -9 $l[2]
@@ -28,12 +28,12 @@ endif
 #
 # start status Daemon
 echo `date` " start_questctl: Starting status_daemon.csh" 
-cd /home/observer/status_srv
+cd $LS4_ROOT/status_srv
 status_daemon.csh >& status_daemon.out &
 
 #
 # change back to home/observer/logs
-cd /home/observer/logs
+cd $LS4_ROOT/logs
 #
 # initialize dome_daemon command to "CLOSE". This prevents
 # dome_daemon from opening the dome until an open command comes
@@ -69,10 +69,10 @@ endif
 #
 echo `date` " start_questctl: Starting questctl" 
 set d = `date +"%Y%m%d%H%M%S"`
-/home/observer/bin/questctl -d >& questctl.$d.log &
+$LS4_ROOT/bin/questctl -d >& questctl.$d.log &
 sleep 5
 echo `date` " start_questctl: Starting dome_daemon.csh" 
-/home/observer/status_srv/dome_daemon.csh >& dome_daemon.out &
+$LS4_ROOT/status_srv/dome_daemon.csh >& dome_daemon.out &
 sleep 5
 echo `date` " start_questctl: done" 
 

@@ -4,14 +4,14 @@
 #
 # Server for status data 
 #
-# This server is intented to run continuously on blade16
-# where a client on quest17 at La Silla will continuously
+# This server is intented to run continuously on public-facing
+# host (ls4-nuc) where a local client willcontinuously
 # send status information (telescope, weather, camera, etc)
 #
 # This server will copy this info to a publically available
 # webpage
 #
-# DLR 2009 Jun 18 
+# DLR 2025 Jul 10 
 
 
 use Env;
@@ -35,7 +35,7 @@ sub docmd {
 ######################################################################
 sub get_config_info {
     
-    my $cfgfile = "./status_srv.cfg";
+    my $cfgfile = "$LS4_ROOT/questlib/status_srv.cfg";
     my $statuscfg = new FileHandle "<  $cfgfile"
 	or die "Could not open $cfgfile: $!";
     my $nmatch = 0;

@@ -1,0 +1,12 @@
+THere are several different command servers, each running on a different TCP socket:
+
+server   |  port name         | value | config file
+questctl | QUEST_COMMAND_PORT | 3911  | questlib/quest.cfg
+
+
+quest.cfg:QUEST_COMMAND_PORT 3911
+quest.conf:TCS_COM_PORT                    1 	# which port of the TCS to use for serial communication
+questsrv-daytime.cfg:QUEST_COMMAND_PORT 3913
+tcs_talk.cfg:TCS_TALK_COMMAND_PORT 3913
+weather_srv.cfg:WEATHER_COMMAND_PORT 3914
+

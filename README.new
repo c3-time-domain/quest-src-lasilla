@@ -1,0 +1,59 @@
+Documentation for the quest-src-lasilla repository
+
+D.Rabinowitz 2025 Jul 10
+
+#########################
+
+This is a repository of programs and scripts to allow automated control of the ESO Schmidt Telescope at La Silla, Chile. It was originally used for the La Silla Quest Survey (LSQ, 2009-1015). It has been slightly modified to run on the new computer network created  for the La Silla Schmidt Southern Survey (LS4).
+
+
+References:
+
+  LS4 Hardware Manual
+  Comsoft TCP Manual
+
+Contents:
+  Host Computers:
+     TCS
+     LS4-nuc
+     LS4-workstn
+
+  Servers:
+     TCP
+     questctl
+     questsrv-daytime.pl
+     status_srv.pl
+     weather_srv.pl
+
+  Daemons:
+     dome_daemon.csh
+     status_daemon.csh
+
+Host Computers:
+
+  TCS : This is the old PC computer with associated software and hardware that directly controls the ESO Schmidt. It was installed in 2009 and updated in 2025. It hosts the telescope control program (TCP) described below.
+
+  LS4-nuc : This is an Intel NUC mini-computer that can be accessed from outside the La Silla firewall by users on the ESO Virtual Private Network. Contact ESO IT staff for permission and instructions to access the ESO VPN. The number of users is limited.
+  
+  LS4-workstn : This is an HP workstation computer used for direct control of the LS4 camera and for indirect control of the ESO Schmidt. LS4-workstn hosts command servers to manage these operations (see below). Automated observations are typically implemented by a schedulng program (launched nightly) that commands the camera and telescope as neccesary to execute a preloaded observation plan (see ls4-scheduler repository).
+
+
+Servers:
+
+   TCP: This is a Windows program that runs on the TCP to allow direct and remote control of the ESO Schmidt. It provides a GUI for entering telescope commands and parameters. It also accepts commands over a selected serial COM port and continuously reports telescope status back through the same serial port. See the Comsoft TCP manual for instructions.
+
+   questctl : During automated observing, this server manages the operation of the telescope including pointing, slewing, dome open/close/rotation, focus, stow, and shutdown.  Normally, it does not run when the sun is up. Once started,it waits for  sun to set before accepting commands and exits when the sun rises. When the dome is open at night, it allows all telescope operations. When  the dome is closed, it accepts only telescope status and dome open/close commands. It is also able to simulate control of the telescope for testing purposes. 
+
+   questsrv-daytime.pl : During the daytime, when questctl is not running, this server accepts a limited number of telescope commands (telescope status, dome init, dome status, and dome open/close).
+
+   status_srv.pl: This server accepts a single command command ("status [message]"), which instructs it to add the respective message to a running status log. The log is normally made accessible and readable by a webpage.
+
+   weather_srv.pl: This server returns the open/closed state of selected telescopes at La Silla (e.g. the NTT). The dome_daemon (described below) uses this as a proxy for when conditions are acceptable for opening the Schmidt telescope.
+
+Daemons
+
+  Several different programs are constantly run in the background (daemons) to support status updates and to ensure that the dome is open only during safe conditions:
+
+  dome_daemon.csh : During night time operations, this program monitors the open/close status of other telescopes at La Silla (see weather_srv.pl, above). If the Schmidt dome is open, it will command the dome to close if any of the following are true : (a) other telescope domes have closed, (b) the sun is up, or (c) a web-based GUI has been used to issue a close command. If the Schmidt dome is closed, it will issue a command to open the dome if all of the following are true: (a) the sun is down, (b) questctl is running, (c) other telescope at La Silla are open, and (d) a web-based GUI has been used to issue an open command.
+
+  status_daemon.csh : This server sends the status of the Schmidt telescope to the status server (see status_srv.pl, above) at regular interval and each each time the open/close status of the La Silla Telescopes change. On each update, it also updates separate logs of the status of the Schmidt Telescope and of the other La Silla Telescope, respectively.

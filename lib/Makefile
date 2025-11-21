@@ -1,4 +1,4 @@
-# Makefile to make libneat.a and libastrocam.a
+# Makefile to make libquestcam.a
 # $RCSfile: Makefile,v $ $Revision: 1.7 $ $Date: 2010/10/12 14:37:27 $
 .KEEP_STATE:
 CC=		gcc 
@@ -17,7 +17,7 @@ OBJFILES=	bcd.o dms.o de2h.o riset.o loopio.o \
 
 QUESTCAMFILES= $(OBJFILES) 
 
-INSTALLDIR= /home/neat/lib
+INSTALLDIR= ./lib
 
 all: libquestcam.a
 

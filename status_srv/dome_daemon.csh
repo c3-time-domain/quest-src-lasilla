@@ -2,28 +2,48 @@
 #
 # dome_daemon.csh
 #
-# check la silla domes status using weather_srv on quest16.
-# Check schmidt dome status by reading tcs.status file which
-# regenerated each time questctl reads a reply from the TCS.
-# If the la silla domes are closed and the schmidt is open,
-# then closed the schmidt
+# During automated night time operations, this daemon will send dome open/
+# close commands to the telescope command server based on the following
+# criteria
 #
-# DLR 2009 Jul 24
+# If the Schmidt dome is open, command it to close it if any
+#  of the following are true:
+#   (1) Other La Silla domes are closed
+#   (2) The sun is up.
+#   (3) A command to close the Schmidt dome has been written to a command file.
 #
-set FAKE_TEST = 0
-if ( $FAKE_TEST == 1 ) then
-  set TCS_FILE = "/home/observer/quest-src-lasilla/fake_tcs.status"
-  set PID_FILE = "/home/observer/logs/fake_questctl.pid"
-  set COMMAND_FILE = "/home/observer/status_srv/fake_dome_daemon.command"
-  set SIGNAL_FILE =  "/home/observer/logs/fake_questctl.signal"
+# If the Schmidt dome is close, send a command to open it if all of the following are true:
+#    (1) The other La Silla domes are open
+#    (2) THe telescope command server (questctl) is running,
+#    (3) The sun is down
+#    (4) A command to open the Schmidt dome has been written to a command file
+#
+#  NOTE: Entries to the command file will normally be made by a web server 
+#  script underlying a web-based GUI accessible only to La Silla Telescope 
+#  operators
+#
+# DLR 2025 Jul 10 
+#
+######################
+
+if ( ! $?LS4_ROOT ) then
+   echo "LS4_ROOT is not a defined environment variable"
+   exit -1
+endif
+
+if ( $FAKE_TELESOPE == 1 ) then
+  set TCS_FILE = "$LS4_ROOT/logs/fake_tcs.status"
+  set PID_FILE = "$LS4_ROOT/logs/fake_questctl.pid"
+  set COMMAND_FILE = "$LS4_ROOT/logs/fake_dome_daemon.command"
+  set SIGNAL_FILE =  "$LS4_ROOT/logs/fake_questctl.signal"
   set dome_log = "fake_dome_daemon.log"
   set temp_file = "fake_dome_daemon.tmp"
   set MAIN_LOOP_DELAY = 10
 else
-  set TCS_FILE = "/home/observer/quest-src-lasilla/tcs.status"
-  set PID_FILE = "/home/observer/logs/questctl.pid"
-  set COMMAND_FILE = "/home/observer/status_srv/dome_daemon.command"
-  set SIGNAL_FILE =  "/home/observer/logs/questctl.signal"
+  set TCS_FILE = "$LS4_ROOT/logs/tcs.status"
+  set PID_FILE = "$LS4_ROOT/logs/questctl.pid"
+  set COMMAND_FILE = "$LS4_ROOT/bin/dome_daemon.command"
+  set SIGNAL_FILE =  "$LS4_ROOT/logs/questctl.signal"
   set dome_log = "dome_daemon.log"
   set temp_file = "dome_daemon.tmp"
   set MAIN_LOOP_DELAY = 60
@@ -45,17 +65,17 @@ set OPENDOME_SIGNAL = 16
 #
 # closedome_direct by passes questctl to close the dome. Necessary is
 # questctl has crashed or is not running
-alias closedome_direct '/home/observer/bin/closedome'
+alias closedome_direct '$LS4_ROOT/bin/closedome'
 #
 # domestatus_direct needee when questctl not running and updating 
 # TCS status file
-alias domestatus_direct  '/home/observer/bin/domestatus |& tail -n 1'
+alias domestatus_direct  '$LS4_ROOT/bin/domestatus |& tail -n 1'
 #
 #
 alias domestatus 'set l0 = `cat $TCS_FILE | cut -c 1-125`; if ( $#l0 >= 15 ) echo $l0[$#l0] ; if ($#l0 < 15) echo -1'
 #
 # use this aliass to check if the sun is up or not
-alias check_sunup 'set l0 = `/home/observer/bin/sunup |& tail -n 1`; echo $l0'
+alias check_sunup 'set l0 = `$LS4_ROOT/bin/sunup |& tail -n 1`; echo $l0'
 #
 #
 # set TEST to 1 to prevent any dome operations, and issue debug statements
@@ -75,7 +95,7 @@ set NUM_CLOSE_STATUS_TRIALS = 20
 # number of time to try getting open status  (10 * 30 seconds total)
 set NUM_OPEN_STATUS_TRIALS = 10
 #
-if ( $FAKE_TEST ) then
+if ( $FAKE_TELESCOPE ) then
   set RETRY_DELAY_TIME = 10
   set NUM_CLOSE_STATUS_TRIALS = 3 
   set NUM_OPEN_STATUS_TRIALS = 3 
@@ -99,7 +119,7 @@ while (1)
 
 # check if sun is up. If so and dome is open, close dome and exit
 
-   if ( $FAKE_TEST == 1 ) then
+   if ( $FAKE_TELESCOPE == 1 ) then
       set sunup_flag = 0
    else
       if ( `check_sunup` ) then
@@ -142,7 +162,7 @@ endif
      end
   else
      echo `date` "questctl not running" >> $dome_log
-     if ( $FAKE_TEST == 1 ) then
+     if ( $FAKE_TELESCOPE == 1 ) then
         echo "domestatus_direct not allowed in fake test"
         exit
      endif
@@ -179,7 +199,7 @@ endif
 # check lasilla dome status up to NUM_STATUS_TRIES times to get valid result
 
 #
-  if ( $FAKE_TEST == 1 ) then
+  if ( $FAKE_TELESCOPE == 1 ) then
      set lasilla_domes_open = 1
      set l2 = "faking lasilla domes open 1"
   else
@@ -276,7 +296,7 @@ endif
 #################
         else
            echo `date` "questctl not running" >> $dome_log
-           if ( $FAKE_TEST == 1 ) then
+           if ( $FAKE_TELESCOPE == 1 ) then
              echo "closedome_direct not allowed in fake test"
              exit
            endif
@@ -302,7 +322,7 @@ endif
                 set l1 = `domestatus`
              end   
           else
-            if ( $FAKE_TEST == 1 ) then
+            if ( $FAKE_TELESCOPE == 1 ) then
               echo "domestatus_direct not allowed in fake test"
               exit
             endif

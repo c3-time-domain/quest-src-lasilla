@@ -47,13 +47,14 @@
 #define ERROR -1
 
 
-int verbose=0;
-
+int verbose=1;
+int fake_flag = 0;
 int init_site(site *mon_site);
 int sunup(Almanac *almanac);
 int getlst(double *lst);
 
 site site_info;
+double fake_ut_offset = 0.0;
 
 
 int main(int argc, char *argv[])
@@ -61,13 +62,20 @@ int main(int argc, char *argv[])
     Almanac almanac;
     int sun_pos;  
 
+    if(argc>1 && strcmp(argv[1],"-f") == 0){
+      fake_flag = 1;
+    }
+    if (argc>3 && strcmp(argv[2],"-t") == 0){
+      sscanf(argv[3],"%lf",&fake_ut_offset);
+    }
+
     if(init_site(&site_info)!=0){
        fprintf(stderr,"could not initialize site_info \n");
        printf("%d\n",ERROR);
        exit(-1);
     }
 
-    if(get_almanac(&almanac)!=0){
+    if(get_almanac(&almanac,site_info.name())!=0){
        fprintf(stderr,"could not initialize almanac\n");
        printf("%d\n",ERROR);
        exit(-1);
@@ -93,7 +101,7 @@ int init_site(site *mon_site)
 
     char confname[NEAT_FILENAMELEN];
     (void) sprintf(confname,"%s/%s",NEAT_SYSDIR,NEAT_CONFIGFILE);
-    if (!(mon_site->configure(confname)))
+    if (!(mon_site->configure(confname,fake_flag)))
     {
         fprintf(stderr,"init_site: error loading configuration file %s\n",
             confname);
@@ -103,6 +111,7 @@ int init_site(site *mon_site)
     else {
         if(verbose){
            fprintf(stderr,"init_site:site configured successfully\n");
+           fprintf(stderr,"site name: %s\n",mon_site->name());
            fprintf(stderr,"site longitude: %10.6f\n",mon_site->lon());
            fprintf(stderr,"site latitude: %10.6f\n",mon_site->lat());
         }
@@ -156,6 +165,9 @@ int sun_pos;
         sun_pos=SUNUP;
      }
    }
+//DEBUG
+   fprintf(stderr,"sunup: forcing sundown for debugging\n");
+   sun_pos = SUNDOWN;
 
    if(verbose){
      if(sun_pos==SUNUP){
@@ -165,6 +177,7 @@ int sun_pos;
        fprintf(stderr,"sunup: sun is down\n");
      }
    }
+
 
    return(sun_pos);
 
@@ -178,14 +191,14 @@ int getlst(double *lst)
     site mon_site;
     char confname[NEAT_FILENAMELEN];
     (void) sprintf(confname,"%s/%s",NEAT_SYSDIR,NEAT_CONFIGFILE);
-    if (!mon_site.configure(confname))
+    if (!mon_site.configure(confname,fake_flag))
     {
         fprintf(stderr,"getlst: error loading configuration file %s\n",
             confname);
         
         return(-1);
     }
-    double now = neat_gettime_utc();
+    double now = neat_gettime_utc(fake_ut_offset);
     *lst = uxt_lst(now,mon_site.lon());
     
     if(verbose)fprintf(stderr,"getlst: lst is %10.7f\n",*lst);
