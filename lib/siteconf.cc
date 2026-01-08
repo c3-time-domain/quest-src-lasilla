@@ -93,6 +93,7 @@ configfile::configfile(char *filename)
 	rec->valstr = rec->keyword;
 	while ((*rec->valstr != '\0') && (!isspace(*rec->valstr)))
 	    rec->valstr++;
+
 	if (*rec->valstr == '\0')
 	{
 	    // end of line without seeing a value
@@ -268,25 +269,47 @@ configfile::print()
     }
 }
 
-// Configure "conf_location" object
 int
 conf_location::configure(configfile &conf)
 {
+   return configure(conf,0);
+}
 
-    if (!conf.lookup(CONF_SITE_NAME,name)) return 0;
-    if (!conf.lookup(CONF_SITE_LAT,&lat)) return 0;
-    if (!conf.lookup(CONF_SITE_LON,&lon)) return 0;
-    if (!conf.lookup(CONF_SITE_ELEV,&elev)) return 0;
-    if (!conf.lookup(CONF_SITE_MIN_ELEVATION,&min_elevation)) return 0;
-    if (!conf.lookup(CONF_SITE_SAFE_ELEVATION,&safe_elevation)) return 0;
+int
+conf_location::configure(configfile &conf, int fake)
+{
+
+    if (fake){
+      if (!conf.lookup(FAKE_CONF_SITE_NAME,name)) return 0;
+      if (!conf.lookup(FAKE_CONF_SITE_LAT,&lat)) return 0;
+      if (!conf.lookup(FAKE_CONF_SITE_LON,&lon)) return 0;
+      if (!conf.lookup(FAKE_CONF_SITE_ELEV,&elev)) return 0;
+      if (!conf.lookup(FAKE_CONF_SITE_MIN_ELEVATION,&min_elevation)) return 0;
+      if (!conf.lookup(FAKE_CONF_SITE_SAFE_ELEVATION,&safe_elevation)) return 0;
+    }
+    else{
+      if (!conf.lookup(CONF_SITE_NAME,name)) return 0;
+      if (!conf.lookup(CONF_SITE_LAT,&lat)) return 0;
+      if (!conf.lookup(CONF_SITE_LON,&lon)) return 0;
+      if (!conf.lookup(CONF_SITE_ELEV,&elev)) return 0;
+      if (!conf.lookup(CONF_SITE_MIN_ELEVATION,&min_elevation)) return 0;
+      if (!conf.lookup(CONF_SITE_SAFE_ELEVATION,&safe_elevation)) return 0;
+    }
     slat = sin(RPD*lat);
     clat = cos(RPD*lat);
     return 1;
 }
 
+
 // Configure "conf_mount" object
 int
 conf_mount::configure(configfile &conf)
+{
+   conf_mount::configure(conf,0);
+}
+
+int
+conf_mount::configure(configfile &conf, int fake)
 {
 
     if (!conf.lookup(CONF_MOUNT_POINT_TIMEOUT, &mount_point_timeout)) return 0;
@@ -298,7 +321,13 @@ conf_mount::configure(configfile &conf)
 int
 conf_tcs::configure(configfile &conf)
 {
+   configure(conf,0);
+}
+int
+conf_tcs::configure(configfile &conf, int fake)
+{
 
+    if (!conf.lookup(TCS_SERVER_NAME, server_name) ) return 0;
     if (!conf.lookup(TCS_COM_PORT, &com_port) ) return 0;
     if(com_port<1 || com_port > 2){
         fprintf(stderr,"com port inconf file must be 1 or 2. It's not set to %d\n",com_port);
@@ -335,23 +364,42 @@ conf_tcs::configure(configfile &conf)
     return 1;
 }
 
+int
+site::configure(char *filename)
+{
+    return configure(filename,0);
+}
 
 // Load configuration file and configure site parameters from it.
 // Returns 1 on success, 0 on failure.
 int
-site::configure(char *filename)
+site::configure(char *filename, int fake)
 {
     // load config file into array of searchable keyword/value string pairs
     configfile conf(filename);
     if (conf.fail) return 0;
 
     // grab any site specific configurations
-    if (!conf.lookup(CONF_SITE_DEBUG, &site_debug)) return 0;
+
+    if( fake){
+      fprintf(stderr,"loading fake conf site info\n");
+    }
+    else{
+      fprintf(stderr,"loading real conf site info\n");
+    }
+
+    if (fake){
+      if (!conf.lookup(FAKE_CONF_SITE_DEBUG, &site_debug)) return 0;
+    }
+    else{
+      if (!conf.lookup(CONF_SITE_DEBUG, &site_debug)) return 0;
+    }
 
     // Configure each sub-category
-    if (!location.configure(conf)) return 0;
-    if (!mount.configure(conf)) return 0;
-    if (!tcs.configure(conf)) return 0;
+      
+    if (!location.configure(conf,fake)) return 0;
+    if (!mount.configure(conf,fake)) return 0;
+    if (!tcs.configure(conf,fake)) return 0;
 
     conf.print();
 

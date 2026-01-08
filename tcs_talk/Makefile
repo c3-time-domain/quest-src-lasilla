@@ -9,16 +9,20 @@ CFLAGS=	-I ../include -g
 LIBS= -lm -lc
 #
 PROGRAMS= tcs_talk 
+
+SCRIPTS=  make_virtual_port.tcsh  quest_neatsrv.pl  talk.csh  tcs_talk_client.pl  tcs_talk_srv.pl
+
 #
 
-all: $(PROGRAMS)
+all: $(PROGRAMS) $(SCRIPTS)
+
 
 	
 TCS_TALK_SOURCES= tcs_talk.c    
 TCS_TALK_OBJECTS= $(TCS_TALK_SOURCES:.c=.o)
 
 
-OBJECTS = $
+OBJECTS = *.o
 
 tcs_talk: $(TCS_TALK_OBJECTS)   
 	$(CC) $(CFLAGS) -o $@ $(TCS_TALK_OBJECTS) $(LIBS) 
@@ -28,3 +32,11 @@ tcs_talk: $(TCS_TALK_OBJECTS)
 
 clean:
 	rm $(OBJECTS) $(PROGRAMS)
+
+INSTALLDIR= ../bin
+
+install: all
+
+	cp $(PROGRAMS) $(SCRIPTS)  $(INSTALLDIR)
+
+

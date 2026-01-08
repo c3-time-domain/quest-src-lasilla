@@ -14,7 +14,7 @@ use IO::Select;
 
 sub get_config_info {
     
-    my $cfgfile = "./status_client.cfg";
+    my $cfgfile = "$LS4_ROOT/questlib/status_client.cfg";
     my $statuscfg = new FileHandle "<  $cfgfile"
 	or die "Could not open $cfgfile: $!";
     my $nmatch = 0;

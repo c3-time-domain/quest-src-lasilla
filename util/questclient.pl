@@ -10,7 +10,7 @@ use IO::Select;
 
 sub get_config_info {
     
-    my $cfgfile = "/home/observer/questlib/quest.cfg";
+    my $cfgfile = "$LS4_ROOT/questlib/quest.cfg";
 #    my $cfgfile = "./quest.cfg";
     my $questcfg = new FileHandle "<  $cfgfile"
 	or die "Could not open $cfgfile: $!";

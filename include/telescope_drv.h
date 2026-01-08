@@ -24,16 +24,19 @@
 #define EXTERN extern
 #endif
 
+#include <observer.h>
+
 #define NO_NOP /* don't need to send NOPs just to get status */
 
 /* EXTERN int telescope_open(void); */
 EXTERN int telescope_open(char*);
-EXTERN int telescope_io(char *cmd, char *response_string);
+//EXTERN int telescope_io(char *cmd, char *response_string, char *server_name, int server_port);
+EXTERN int telescope_io(char *cmd, char *response_string, char *tcs_prog_name, char *tcs_status_file);
 EXTERN int telescope_close(int serial_fd);
 
 /*  TCS communincation program */
-//#define TCS_PROGRAM "/home/observer/bin/tcs_talk"
-#define TCS_PROGRAM "/home/observer/bin/tcs_talk_client.pl"
+// now defined as environment variable in .login file
+// #define TCS_PROGRAM "/home/observer/bin/tcs_talk_client.pl"
 
 /* ERROR code for bad communication with TCS */
 #define TCS_ERROR_CODE "TCS_ERROR"
@@ -45,8 +48,8 @@ EXTERN int telescope_close(int serial_fd);
 #define TEL_RESPONSE_SIZE 1024
 
 /* TCP log file */
-#define TCS_LOG_FILE "/home/observer/quest-src-lasilla/tcs.log"
-#define TCS_STATUS_FILE "/home/observer/quest-src-lasilla/tcs.status"
+// now defined as environement varables  in .login fulke
+//#define TCS_STATUS_FILE "/home/observer/logs/tcs.status"
 
 // Mode selection for point commands: fixed point or sidereal rate track
 enum pointmode {TELMOUNT_POINT,TELMOUNT_SIDTRACK};

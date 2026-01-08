@@ -7,8 +7,14 @@
 #
 # DLR 2009 Aug 10
 #
-set COMMAND_FILE = "/home/observer/status_srv/dome_daemon.command"
-set PID_FILE = "/home/observer/logs/questctl.pid"
+if ( ! $?LS4_ROOT ) then
+   echo "LS4_ROOT is not a defined environment variable"
+   exit -1
+endif
+source $LS4_ROOT/.login
+
+set COMMAND_FILE = "$LS4_ROOT/status_srv/dome_daemon.command"
+set PID_FILE = "$LS4_ROOT/logs/questctl.pid"
 set VERBOSE = 0
 
 set questctl_on = 0

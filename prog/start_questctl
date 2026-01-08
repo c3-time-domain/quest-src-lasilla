@@ -1,4 +1,4 @@
-#!/bin/tcsh
+#!/usr/bin/tcsh
 #
 # start_questctl
 #
@@ -10,17 +10,60 @@
 # the dome will be operated manually. No automatic closures in bad weather or
 # by remote control unless the dome_damon is on
 #
-# set FAKE_TELESCOPE to 0 for real telescopeops.
-set FAKE_TELESCOPE = 1
+# set FAKE_TELESCOPE to 0 for real telescope ops.
+# FAKE_TELESCOPE is not an environment variable
+#set FAKE_TELESCOPE = 1
+
+if ( ! $?LS4_ROOT ) then
+   echo "LS4_ROOT is not a defined environment variable"
+   exit -1
+endif
+
+source $LS4_ROOT/.login
+
+if ( ! $?FAKE_TELESCOPE ) then
+   echo "FAKE_TELESCOPE is not a defined environment variable"
+   exit -1
+endif
+
+if ( ! $?FAKE_UT_OFFSET ) then
+   echo "FAKE_UT_OFFSET is not a defined environment variable"
+   exit -1
+endif
+
+echo "FAKE_TELESCOPE = $FAKE_TELESCOPE"
+echo "FAKE_UT_OFFSET= $FAKE_UT_OFFSET"
+set QUESTCTL_OPTION = ""
+
+if ( $FAKE_TELESCOPE ) then
+  set FAKE_OPTION = "-f -t $FAKE_UT_OFFSET"
+  set QUESTCTL_OPTION = "$QUESTCTL_OPTION -f -t $FAKE_UT_OFFSET"
+else
+  set FAKE_OPTION = ""
+endif
+
+set 
+
+if ( ! $?OVERRIDE_DOME ) then
+   echo "OVERRIDE_DOME is not a defined environment variable"
+   exit -1
+endif
+
+if ( $OVERRIDE_DOME ) then
+  set QUESTCTL_OPTION = "$QUESTCTL_OPTION -o "
+endif
+
+echo "QUESTCTL_OPTION is $QUESTCTL_OPTION"
+
 set DOME_DAEMON_ON = 1
-set COMMAND_FILE = "/home/observer/status_srv/dome_daemon.command"
+set COMMAND_FILE = "$LOG_DIR/dome_daemon.command"
 #
 # seconds to wait after sundown before starting questctl and dome_daemon.
 # This gives time for darks
 set STARTUP_DELAY = 900
 #
 # slay questctl, dome_daemon, and status_daemon
-cd /home/observer/logs    
+cd $LS4_ROOT/logs    
 set l = `ps -aef | grep "questctl" | grep -ve "grep" | grep -ve "start"`
 if ( $#l > 0 ) then
    kill -9 $l[2]
@@ -37,20 +80,25 @@ set l = `ps -aef | grep "tcs_talk_srv.pl" | grep -ve "grep" | grep -ve "start"`
 if ( $#l > 0 ) then
    kill -9 $l[2]
 endif
+set l = `ps -aef | grep "weather_srv.pl" | grep -ve "grep" | grep -ve "start"`
+if ( $#l > 0 ) then
+   kill -9 $l[2]
+endif
 #
 # start tcs_talk server
 echo `date` " start_questctl: Starting tcs_talk_srv.pl" 
-cd /home/observer/logs
-/home/observer/bin/tcs_talk_srv.pl >& tcs_talk_srv.log &
+$LS4_ROOT/bin/tcs_talk_srv.pl >& $LS4_ROOT/logs/tcs_talk_srv.log &
 #
 # start status Daemon
 echo `date` " start_questctl: Starting status_daemon.csh" 
-cd /home/observer/status_srv
-status_daemon.csh >& status_daemon.out &
+$LS4_ROOT/bin/status_daemon.csh >& $LOG_DIR/status_daemon.out &
+#
+# start wather Daemon
+echo `date` " start_questctl: Starting weather server"
+$LS4_ROOT/bin/start_weather_server >& $LOG_DIR/start_weather_srv.out &
 
 #
-# change back to home/observer/logs
-cd /home/observer/logs
+cd $LS4_ROOT/logs
 #
 # initialize dome_daemon command to "CLOSE". This prevents
 # dome_daemon from opening the dome until an open command comes
@@ -66,14 +114,14 @@ echo "CLOSE " `date -u ` " " `date +"%s"` >! $COMMAND_FILE
 # dome daemon
 #
 echo `date` " start_questctl: waiting for sundown" 
-sunup >& sunup.tmp
+sunup $FAKE_OPTION >& sunup.tmp
 set sunup_is_up = `tail -n 1 sunup.tmp`
 if ( $sunup_is_up == 1  && $FAKE_TELESCOPE == 0) then
 
     while ( $sunup_is_up == 1  && $FAKE_TELESCOPE == 0)
       echo `date ` " sun still up"
       sleep 120
-      sunup >& sunup.tmp
+      sunup $FAKE_OPTION >& sunup.tmp
       set sunup_is_up = `tail -n 1 sunup.tmp`
     end
 #
@@ -86,15 +134,12 @@ endif
 #
 echo `date` " start_questctl: Starting questctl" 
 set d = `date +"%Y%m%d%H%M%S"`
-if ( $FAKE_TELESCOPE) then
-  /home/observer/bin/questctl -f >& questctl.$d.log &
-else
-  /home/observer/bin/questctl -d >& questctl.$d.log &
-endif
+echo "$LS4_ROOT/bin/questctl $QUESTCTL_OPTION  >& questctl.$d.log &"
+$LS4_ROOT/bin/questctl $QUESTCTL_OPTION  >& questctl.$d.log &
 sleep 5
 if ( $DOME_DAEMON_ON == 1 ) then
   echo `date` " start_questctl: Starting dome_daemon.csh" 
-  /home/observer/status_srv/dome_daemon.csh >& dome_daemon.out &
+  $LS4_ROOT/bin/dome_daemon.csh >& $LOG_DIR/dome_daemon.out &
   sleep 5
 else
   echo `date` " start_questctl: Skipping start of dome_daemon.csh" 

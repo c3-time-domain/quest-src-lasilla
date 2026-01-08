@@ -32,7 +32,7 @@
  * hour, minute, and second UT
  */
 double
-get_date_time(struct tm *tm)
+get_date_time(struct tm *tm, double ut_offset)
 {
     struct timeval tv;
     double ut;
@@ -41,9 +41,9 @@ get_date_time(struct tm *tm)
     *tm = *gmtime(&(tv.tv_sec));
     ut = tm->tm_hour + tm->tm_min/60. + tm->tm_sec/3600.;
 
-    if(UT_OFFSET!=0.0){
+    if(ut_offset!=0.0){
 
-       ut=ut+UT_OFFSET;
+       ut=ut+ut_offset;
        if(ut>24.0){
 	   ut=ut-24.0;
 	   advance_tm_day(tm);
@@ -109,18 +109,19 @@ int leap_year_check(int year)
  * Includes available sub-second precision as fractional part.
  */
 double
-neat_gettime_utc()
+neat_gettime_utc(double ut_offset)
 {
     struct timeval tv;
     double t;
 
     (void) gettimeofday(&tv,NULL);
     t = tv.tv_sec + (tv.tv_usec/1000000.0);
-    return t;
 
-    if (UT_OFFSET != 0){
-	t = t + UT_OFFSET * 3600.0;
+    if (ut_offset != 0){
+	t = t + ut_offset * 3600.0;
     }
+
+    return t;
 }
 
 /* uxt_mjd

@@ -10,7 +10,7 @@ set l = `ps -aef | grep questsrv-daytime | grep -ve "grep" | grep -ve "start"`
 if  ( $#l > 0 ) then
    kill -9 $l[2]
 endif
-cd /home/observer/logs
+cd $LS4_ROOT/logs
 set d = `date +"%Y%m%d%H%M%S"`
 set log =  questsrv_daytime.$d.log
 date >! $log

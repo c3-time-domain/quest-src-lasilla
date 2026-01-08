@@ -6,12 +6,20 @@
 #
 # Otherwise, run domestatus and then write the TCS_FILE
 #
-set TCS_FILE = "/home/observer/quest-src-lasilla/tcs.status"
-set PID_FILE = "/home/observer/logs/questctl.pid"
+if ( ! $?LS4_ROOT ) then
+   echo "LS4_ROOT is not a defined environment variable"
+   exit -1
+endif
+source $LS4_ROOT/.login
+    
+set TCS_FILE = "$LS4_ROOT/logs/tcs.status"
+set PID_FILE = "$LS4_ROOT/logs/questctl.pid"
 set TEMP_FILE = "/tmp/check_telescope_status.tmp"
 alias check_questctl 'ps -aef | grep -e "`cat $PID_FILE`" | grep -ve "grep" | wc -l'
 
-if (! `check_questctl`) then
-     domestatus >&  $TEMP_FILE
+if (-e $PID_FILE ) then
+  if ( ! `check_questctl`) then
+     $LS4_ROOT/bin/domestatus >&  $TEMP_FILE
+  endif
 endif
 cat $TCS_FILE | cut -c 1-125

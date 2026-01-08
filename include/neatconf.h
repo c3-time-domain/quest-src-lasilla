@@ -17,6 +17,7 @@
 #define _NEATCONF_H_
 
 #include <syslog.h>
+#include <observer.h>
 
 #define NEAT_VIC_TASKNAME	"NEATCCD"	/* data collection task name */
 #define NEAT_VIC_USERNAME	"NEAT"		/* data collection user name */

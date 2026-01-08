@@ -10,6 +10,7 @@
 #include <telescope_controller.h>
 #define COM_PORT 1 /* com port used by TCS for external io */
 #define POINT_TIMEOUT 300 /* timeout in seconds for pointing the telescope */
+#define SERVER_NAME "ls4-workstn"
 
 //EXTERN int tel_ctlr_debug;
 //EXTERN int tel_drv_debug;
@@ -43,7 +44,7 @@ int main(int argc, char *argv[]) {
 	}
     }
 
-    tcu = new telescope_controller(COM_PORT,POINT_TIMEOUT);
+    tcu = new telescope_controller(COM_PORT,POINT_TIMEOUT,SERVER_NAME);
     status = tcu->telescope_status();
 
     if (status!=0){

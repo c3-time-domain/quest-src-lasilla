@@ -36,25 +36,25 @@ sub docmd {
 
 sub domestatus {
     # Check dome status
-    my $ret = docmd "/home/observer/bin/domestatus.csh";
+    my $ret = docmd "$LS4_ROOT/bin/domestatus.csh";
     return $ret;
 }
 
 sub domeinit {
     # set current dome position to stow position
-    my $ret = docmd "/home/observer/bin/domeinit.csh";
+    my $ret = docmd "$LS4_ROOT/bin/domeinit.csh";
     return $ret;
 }
 
 sub auto_dome_on {
     # turn dome following on
-    my $ret = docmd "/home/observer/bin/auto_dome_on.csh";
+    my $ret = docmd "$LS4_ROOT/bin/auto_dome_on.csh";
     return $ret;
 }
 
 sub auto_dome_off {
     # turn dome following off
-    my $ret = docmd "/home/observer/bin/auto_dome_off.csh";
+    my $ret = docmd "$LS4_ROOT/bin/auto_dome_off.csh";
     return $ret;
 }
 
@@ -62,13 +62,13 @@ sub move_dome {
     my ($dome_pos) = @_;
 
     # move dome to specified position
-    my $ret = docmd "/home/observer/bin/move_dome.csh $dome_pos";
+    my $ret = docmd "$LS4_ROOT/bin/move_dome.csh $dome_pos";
     return $ret;
 }
 
 sub closedome {
     # Close Dome
-    my $ret = docmd "/home/observer/bin/closedome.csh";
+    my $ret = docmd "$LS4_ROOT/bin/closedome.csh";
     return $ret;
 #    printf STDERR "closedome not yet implemented\n";
 #    my $ret = "ERROR";
@@ -76,7 +76,7 @@ sub closedome {
 
 sub opendome {
     # Open Dome
-    my $ret = docmd "/home/observer/bin/opendome.csh"; 
+    my $ret = docmd "$LS4_ROOT/bin/opendome.csh"; 
     return $ret;
 #    printf STDERR "opendome not yet implemented\n";
 #    my $ret = "ERROR";
@@ -85,17 +85,17 @@ sub opendome {
 
 sub telescope_status {
     # Check telescope status
-    my $ret = docmd "/home/observer/bin/telescope_status.csh";
+    my $ret = docmd "$LS4_ROOT/bin/telescope_status.csh";
     return $ret;
 }
 
 sub weather {
-    my $ret = docmd "/home/observer/bin/weather";
+    my $ret = docmd "$LS4_ROOT/bin/weather";
     return $ret;
 }
 
 sub filter {
-    my $ret = docmd "/home/observer/getfilter";
+    my $ret = docmd "$LS4_ROOT/getfilter";
     return $ret;
 }
 
@@ -105,7 +105,7 @@ sub filter {
 ######################################################################
 sub get_config_info {
     
-    my $cfgfile = "/home/observer/questlib/questsrv-daytime.cfg";
+    my $cfgfile = "$LS4_ROOT/questlib/questsrv-daytime.cfg";
     my $questcfg = new FileHandle "<  $cfgfile"
 	or die "Could not open $cfgfile: $!";
     my $nmatch = 0;

@@ -158,7 +158,7 @@ while(1) {
 	    if (($msg =~ /^s\0/) || ($msg =~ /^status\0/) ) {
 		$ret = docmd("ntt_dome_status");
 		sel_write($tsel,$ret);
-	    } elsif (($msg =~ /^x\0/) || ($msg =~ /^shutown\0/) ) {
+	    } elsif (($msg =~ /^x\0/) || ($msg =~ /^shutdown\0/) ) {
 		shutDown();
 	    } else {
 		printf STDERR "server: bad command: $msg\n";
