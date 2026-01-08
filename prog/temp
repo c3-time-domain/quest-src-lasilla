@@ -1,0 +1,188 @@
+gcc  -g -Wall -I../include  -c questctl.cc
+In file included from questctl.cc:63:
+../include/almanac.h:36: warning: "PI" redefined
+   36 | #define  PI                3.14159265358979
+      | 
+In file included from ../include/site.h:16,
+                 from ../include/telmount.h:19,
+                 from questctl.cc:53:
+../include/mathconst.h:10: note: this is the location of the previous definition
+   10 | #define PI 3.1415926535897932384626
+      | 
+In file included from questctl.cc:63:
+../include/almanac.h:42: warning: "J2000" redefined
+   42 | #define  J2000             2451545.        /* Julian date at standard epoch */
+      | 
+In file included from ../include/telescope_controller.h:18,
+                 from ../include/telmount.h:21,
+                 from questctl.cc:53:
+../include/neattime.h:26: note: this is the location of the previous definition
+   26 | #define J2000   2451545.0 /* JD for epoch J2000, AA95, B4 */
+      | 
+questctl.cc: In function ‘int main(int, char**)’:
+questctl.cc:325:59: error: too few arguments to function ‘double get_date_time(tm*, double)’
+  325 |     fprintf(stderr,"current ut is %12.6f\n", get_date_time(&tm));
+      |                                              ~~~~~~~~~~~~~^~~~~
+In file included from ../include/telescope_controller.h:18,
+                 from ../include/telmount.h:21,
+                 from questctl.cc:53:
+../include/neattime.h:29:15: note: declared here
+   29 | EXTERN double get_date_time(struct tm *tm, double ut_offset);/* return UT date from system clock */
+      |               ^~~~~~~~~~~~~
+questctl.cc:171:26: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  171 | #define EXIT_CODE_STRING "EXIT"
+      |                          ^~~~~~
+questctl.cc:370:31: note: in expansion of macro ‘EXIT_CODE_STRING’
+  370 |               record_response(EXIT_CODE_STRING);
+      |                               ^~~~~~~~~~~~~~~~
+questctl.cc:169:26: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  169 | #define OPEN_CODE_STRING "OPEN"
+      |                          ^~~~~~
+questctl.cc:376:31: note: in expansion of macro ‘OPEN_CODE_STRING’
+  376 |               record_response(OPEN_CODE_STRING);
+      |                               ^~~~~~~~~~~~~~~~
+questctl.cc:171:26: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  171 | #define EXIT_CODE_STRING "EXIT"
+      |                          ^~~~~~
+questctl.cc:425:31: note: in expansion of macro ‘EXIT_CODE_STRING’
+  425 |               record_response(EXIT_CODE_STRING);
+      |                               ^~~~~~~~~~~~~~~~
+questctl.cc:170:27: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  170 | #define CLOSE_CODE_STRING "CLOSE"
+      |                           ^~~~~~~
+questctl.cc:520:31: note: in expansion of macro ‘CLOSE_CODE_STRING’
+  520 |               record_response(CLOSE_CODE_STRING);
+      |                               ^~~~~~~~~~~~~~~~~
+questctl.cc:169:26: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  169 | #define OPEN_CODE_STRING "OPEN"
+      |                          ^~~~~~
+questctl.cc:530:31: note: in expansion of macro ‘OPEN_CODE_STRING’
+  530 |               record_response(OPEN_CODE_STRING);
+      |                               ^~~~~~~~~~~~~~~~
+questctl.cc:172:26: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  172 | #define STOW_CODE_STRING "STOW"
+      |                          ^~~~~~
+questctl.cc:541:31: note: in expansion of macro ‘STOW_CODE_STRING’
+  541 |               record_response(STOW_CODE_STRING);
+      |                               ^~~~~~~~~~~~~~~~
+questctl.cc:171:26: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  171 | #define EXIT_CODE_STRING "EXIT"
+      |                          ^~~~~~
+questctl.cc:552:31: note: in expansion of macro ‘EXIT_CODE_STRING’
+  552 |               record_response(EXIT_CODE_STRING);
+      |                               ^~~~~~~~~~~~~~~~
+questctl.cc:168:30: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  168 | #define SHUTDOWN_CODE_STRING "SHUTDOWN"
+      |                              ^~~~~~~~~~
+questctl.cc:560:31: note: in expansion of macro ‘SHUTDOWN_CODE_STRING’
+  560 |               record_response(SHUTDOWN_CODE_STRING);
+      |                               ^~~~~~~~~~~~~~~~~~~~
+questctl.cc:588:71: warning: format ‘%ld’ expects argument of type ‘long int’, but argument 4 has type ‘int’ [-Wformat=]
+  588 |              fprintf(stderr,"%s: activity sensed on listener socket %ld\n",
+      |                                                                     ~~^
+      |                                                                       |
+      |                                                                       long int
+      |                                                                     %d
+  589 |                 argv[0],listenfd);
+      |                         ~~~~~~~~                                       
+      |                         |
+      |                         int
+questctl.cc: In function ‘int process_command(char*, char*, int)’:
+questctl.cc:1160:88: warning: format ‘%f’ expects argument of type ‘double’, but argument 5 has type ‘int’ [-Wformat=]
+ 1160 |                 "process_command: requested focus %8.3f ( %d steps) out of range: %12.0f to %12.0f\n",
+      |                                                                                   ~~~~~^
+      |                                                                                        |
+      |                                                                                        double
+      |                                                                                   %12.0d
+ 1161 |                                         f_mm,f_steps,MIN_FCS,MAX_FCS);
+      |                                                      ~~~~~~~                            
+      |                                                      |
+      |                                                      int
+questctl.cc:1160:98: warning: format ‘%f’ expects argument of type ‘double’, but argument 6 has type ‘int’ [-Wformat=]
+ 1160 |                 "process_command: requested focus %8.3f ( %d steps) out of range: %12.0f to %12.0f\n",
+      |                                                                                             ~~~~~^
+      |                                                                                                  |
+      |                                                                                                  double
+      |                                                                                             %12.0d
+ 1161 |                                         f_mm,f_steps,MIN_FCS,MAX_FCS);
+      |                                                              ~~~~~~~                              
+      |                                                              |
+      |                                                              int
+questctl.cc: In function ‘int get_filter(telescope_controller*, char*)’:
+questctl.cc:1438:20: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+ 1438 |            sprintf("filter_string,filter: %s\n",filter+(FILTER_NAME_LENGTH*index));
+      |                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+questctl.cc:1438:19: warning: format not a string literal and no format arguments [-Wformat-security]
+ 1438 |            sprintf("filter_string,filter: %s\n",filter+(FILTER_NAME_LENGTH*index));
+      |            ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+questctl.cc: In function ‘int init_command_file()’:
+questctl.cc:1772:8: warning: unused variable ‘string’ [-Wunused-variable]
+ 1772 |   char string[1024];
+      |        ^~~~~~
+questctl.cc: In function ‘int record_response(char*)’:
+questctl.cc:1877:24: warning: format ‘%d’ expects argument of type ‘int’, but argument 4 has type ‘__time_t’ {aka ‘long int’} [-Wformat=]
+ 1877 |    fprintf(output,"%s %d\n",string,t.tv_sec);
+      |                       ~^           ~~~~~~~~
+      |                        |             |
+      |                        int           __time_t {aka long int}
+      |                       %ld
+questctl.cc: In function ‘int make_fake_status(int, TCS_Telemetry*)’:
+questctl.cc:1906:18: warning: comparison of integer expressions of different signedness: ‘int’ and ‘long unsigned int’ [-Wsign-compare]
+ 1906 |    for (int i=0;i<sizeof(TCS_Telemetry);i++){
+      |                 ~^~~~~~~~~~~~~~~~~~~~~~
+questctl.cc:190:19: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  190 | #define RA_FORMAT "%02d%02d%05.2f"
+      |                   ^~~~~~~~~~~~~~~~
+questctl.cc:1912:34: note: in expansion of macro ‘RA_FORMAT’
+ 1912 |    hr_to_string(my_fake_ra,t->ra,RA_FORMAT);
+      |                                  ^~~~~~~~~
+questctl.cc:191:20: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  191 | #define DEC_FORMAT "%1s%02d%02d%05.2f"
+      |                    ^~~~~~~~~~~~~~~~~~~
+questctl.cc:1914:37: note: in expansion of macro ‘DEC_FORMAT’
+ 1914 |    deg_to_string(my_fake_dec,t->dec,DEC_FORMAT);
+      |                                     ^~~~~~~~~~
+questctl.cc:192:19: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  192 | #define HA_FORMAT "%1s%02d:%02d:%02d"
+      |                   ^~~~~~~~~~~~~~~~~~~
+questctl.cc:1916:34: note: in expansion of macro ‘HA_FORMAT’
+ 1916 |    hr_to_string(my_fake_ha,t->ha,HA_FORMAT);
+      |                                  ^~~~~~~~~
+questctl.cc:193:20: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  193 | #define LST_FORMAT "%02d:%02d:%02d"
+      |                    ^~~~~~~~~~~~~~~~
+questctl.cc:1919:36: note: in expansion of macro ‘LST_FORMAT’
+ 1919 |    hr_to_string(my_fake_lst,t->lst,LST_FORMAT);
+      |                                    ^~~~~~~~~~
+questctl.cc:1953:30: warning: format ‘%d’ expects argument of type ‘int’, but argument 3 has type ‘double’ [-Wformat=]
+ 1953 |    sprintf(t->focus_pos,"%+05d",my_fake_focus);
+      |                          ~~~~^  ~~~~~~~~~~~~~
+      |                              |  |
+      |                              |  double
+      |                              int
+      |                          %+05f
+questctl.cc:194:19: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  194 | #define UT_FORMAT "%02d:%02d:%04.1f"
+      |                   ^~~~~~~~~~~~~~~~~~
+questctl.cc:1957:39: note: in expansion of macro ‘UT_FORMAT’
+ 1957 |    hr_to_string(my_fake_ut,t->ut_time,UT_FORMAT);
+      |                                       ^~~~~~~~~
+questctl.cc:1909:33: warning: ‘sprintf’ writing a terminating nul past the end of the destination [-Wformat-overflow=]
+ 1909 |    sprintf(t->motion_status,"%1d",my_fake_status);
+      |                                 ^
+questctl.cc:1909:11: note: ‘sprintf’ output between 2 and 12 bytes into a destination of size 1
+ 1909 |    sprintf(t->motion_status,"%1d",my_fake_status);
+      |    ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+questctl.cc:1959:30: warning: ‘sprintf’ writing a terminating nul past the end of the destination [-Wformat-overflow=]
+ 1959 |    sprintf(t->dome_state,"%1d",dome_state);
+      |                              ^
+questctl.cc:1959:11: note: ‘sprintf’ output between 2 and 12 bytes into a destination of size 1
+ 1959 |    sprintf(t->dome_state,"%1d",dome_state);
+      |    ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+questctl.cc:1962:21: warning: ‘sprintf’ writing a terminating nul past the end of the destination [-Wformat-overflow=]
+ 1962 |    sprintf(t->cr,"\r");
+      |                     ^
+questctl.cc:1962:11: note: ‘sprintf’ output 2 bytes into a destination of size 1
+ 1962 |    sprintf(t->cr,"\r");
+      |    ~~~~~~~^~~~~~~~~~~~
+make: *** [Makefile:131: questctl.o] Error 1

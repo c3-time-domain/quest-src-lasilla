@@ -1,0 +1,7 @@
+tcs_talk_srv: command is: echo STATUS | /home/observer/bin/tcs_talk
+tcs_talk_srv:  return is: 0  155646.21 +505906.6  +00:00:12 15:57:15  10.0   -0.0  5.74 E          HD2000.000 2455146.2 1 -246620  +0.7 17:20:14.0 0                         ÿ
+
+tcs_talk_srv: command is: echo STATUS | /home/observer/bin/tcs_talk
+tcs_talk_srv: exit command received.
+tcs_talk_srv:  return is: 0  155651.21 +505906.5  +00:00:12 15:57:20  10.0   -0.0  5.74 E          HD2000.000 2455146.2 1 -246620  +0.7 17:20:18.9 0                         ÿ
+

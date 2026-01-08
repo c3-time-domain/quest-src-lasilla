@@ -1,0 +1,60 @@
+#!/bin/tcsh
+#
+# transfer_backup.csh
+# DLR 2010 03 05
+#
+# make a backup of untransferred QUEST data to the USB Terabyte disk
+# only backup data less than MAX_AGE seconds old.
+#
+#
+set BACKUP_DIR = "/scr3/quest/data"
+set TRANSFER_DIR = "/scr1/quest/data/quest/data/realtime"
+# set MAX_AGE to 1 day in seconds
+set MAX_AGE = 86400
+#
+if ( ! -e $BACKUP_DIR ) then
+  echo "ERROR: can't find BACKUP_DIR = $BACKUP_DIR "
+  exit
+endif
+#
+if ( ! -e $TRANSFER_DIR ) then
+  echo "ERROR: can't find TRANSFER_DIR = $TRANSFER_DIR"
+  exit
+endif
+ 
+set d = `date +"%Y%d%m"`
+set dest_dir = "$BACKUP_DIR/$d"
+set TEMP_FILE = "$TRANSFER_DIR/transfer_backup.$d"
+#
+if ( ! -e $dest_dir ) then
+   mkdir $dest_dir
+   chmod -R 777 $dest_dir
+endif
+set LOG_FILE = "$dest_dir/transfer_backup.log"
+#
+cd $TRANSFER_DIR
+echo `date` " Starting transfer backup" >! $LOG_FILE
+#
+set t_current = `date +"%s"`
+ls -l --time-style=+"%s" *ready > ! $TEMP_FILE 
+set n = `cat $TEMP_FILE | wc -l`
+set i = 1
+while ( $i < = $n )
+  set l = `head -n $i $TEMP_FILE | tail -n 1`
+  set t = $l[6]
+  set file = $l[7]
+  echo `date` " Checking $file with date $t" >> $LOG_FILE
+  if ( $t_current - $t < $MAX_AGE ) then
+   if ( ! -e $dest_dir/$file ) then
+      echo `date` " Copying $file to $dest_dir/$file" >> $LOG_FILE
+      cp $file $dest_dir
+      chmod 777 $dest_dir/$file
+   else
+     echo `date` " $file already copied. Skipping" >> $LOG_FILE
+   endif
+  else
+     echo `date` " $file more than $MAX_AGE sec old. Skipping" >> $LOG_FILE
+  endif
+  @ i = $i + 1
+end
+echo `date` "Done with transfer backup" >> $LOG_FILE

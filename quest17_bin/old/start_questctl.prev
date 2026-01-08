@@ -1,0 +1,87 @@
+#!/bin/tcsh
+#
+# start_questctl
+#
+# start up the questctl program, which controls the telescope at night
+# after the dome is opened. But wait until sun is not up to launch it
+#
+set COMMAND_FILE = "/home/observer/status_srv/dome_daemon.command"
+#
+# seconds to wait after sundown before starting questctl and dome_daemon.
+# This gives time for darks
+set STARTUP_DELAY = 900
+#
+# slay questctl, dome_daemon, and status_daemon
+cd /home/observer/logs    
+set l = `ps -aef | grep "questctl" | grep -ve "grep" | grep -ve "start"`
+if ( $#l > 0 ) then
+   kill -9 $l[2]
+endif
+set l = `ps -aef | grep "dome_daemon" | grep -ve "grep" | grep -ve "start"`
+if ( $#l > 0 ) then
+   kill -9 $l[2]
+endif
+set l = `ps -aef | grep "status_daemon" | grep -ve "grep" | grep -ve "start"`
+if ( $#l > 0 ) then
+   kill -9 $l[2]
+endif
+set l = `ps -aef | grep "tcs_talk_srv.pl" | grep -ve "grep" | grep -ve "start"`
+if ( $#l > 0 ) then
+   kill -9 $l[2]
+endif
+#
+# start tcs_talk server
+echo `date` " start_questctl: Starting tcs_talk_srv.pl" 
+cd /home/observer/logs
+/home/observer/bin/tcs_talk_srv.pl >& tcs_talk_srv.log &
+#
+# start status Daemon
+echo `date` " start_questctl: Starting status_daemon.csh" 
+cd /home/observer/status_srv
+status_daemon.csh >& status_daemon.out &
+
+#
+# change back to home/observer/logs
+cd /home/observer/logs
+#
+# initialize dome_daemon command to "CLOSE". This prevents
+# dome_daemon from opening the dome until an open command comes
+# from the lasilla_quest.html control page. "OPEN" would
+# allow the dome_daemon to open the dome automatically once the
+# sun goes down and the other domes are open.
+#
+#echo "OPEN " `date -u ` " " `date +"%s"` >! $COMMAND_FILE
+echo "CLOSE " `date -u ` " " `date +"%s"` >! $COMMAND_FILE
+#
+# if sun is up, wait until it goes down and then wait
+# and extra STARTUP_DELAY before starting questctl and 
+# dome daemon
+#
+echo `date` " start_questctl: waiting for sundown" 
+sunup >& sunup.tmp
+set sunup_is_up = `tail -n 1 sunup.tmp`
+if ( $sunup_is_up == 1 ) then
+
+    while ( $sunup_is_up == 1 )
+      echo `date ` " sun still up"
+      sleep 120
+      sunup >& sunup.tmp
+      set sunup_is_up = `tail -n 1 sunup.tmp`
+    end
+#
+# now sun is down
+# wait STARTUP_DELAY seconds
+    echo `date` " start_questctl: sun is up. Waiting $STARTUP_DELAY seconds..."
+    sleep $STARTUP_DELAY
+
+endif
+#
+echo `date` " start_questctl: Starting questctl" 
+set d = `date +"%Y%m%d%H%M%S"`
+/home/observer/bin/questctl -d >& questctl.$d.log &
+sleep 5
+echo `date` " start_questctl: Starting dome_daemon.csh" 
+/home/observer/status_srv/dome_daemon.csh >& dome_daemon.out &
+sleep 5
+echo `date` " start_questctl: done" 
+

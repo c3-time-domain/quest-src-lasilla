@@ -1,0 +1,17 @@
+#!/bin/tcsh
+#
+# get_tcs_status.csh
+#
+# if questctl is running, just print the contents of TCS_FILE to stdout.
+#
+# Otherwise, run domestatus and then write the TCS_FILE
+#
+set TCS_FILE = "/home/observer/quest-src-lasilla/tcs.status"
+set PID_FILE = "/home/observer/logs/questctl.pid"
+set TEMP_FILE = "/tmp/check_telescope_status.tmp"
+alias check_questctl 'ps -aef | grep -e " `cat $PID_FILE` " | grep -ve "grep" | wc -l'
+
+if (! `check_questctl`) then
+     domestatus >&  $TEMP_FILE
+endif
+cat $TCS_FILE | cut -c 1-125
