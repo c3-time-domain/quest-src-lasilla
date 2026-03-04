@@ -1,0 +1,148 @@
+#!/usr/bin/tcsh
+#
+# start_questctl
+#
+# start up the questctl program, which controls the telescope at night
+# after the dome is opened. But wait until sun is not up to launch it
+#
+#set DOME_DAEMON_ON to 1 to start dome_daemon, 0 to skip starting the dome daemon.
+# Shutuff off dome_daemon only if
+# the dome will be operated manually. No automatic closures in bad weather or
+# by remote control unless the dome_damon is on
+#
+# set FAKE_TELESCOPE to 0 for real telescope ops.
+# FAKE_TELESCOPE is not an environment variable
+#set FAKE_TELESCOPE = 1
+
+if ( ! $?LS4_ROOT ) then
+   echo "LS4_ROOT is not a defined environment variable"
+   exit -1
+endif
+
+source $LS4_ROOT/.login
+
+if ( ! $?FAKE_TELESCOPE ) then
+   echo "FAKE_TELESCOPE is not a defined environment variable"
+   exit -1
+endif
+
+if ( ! $?FAKE_UT_OFFSET ) then
+   echo "FAKE_UT_OFFSET is not a defined environment variable"
+   exit -1
+endif
+
+echo "FAKE_TELESCOPE = $FAKE_TELESCOPE"
+echo "FAKE_UT_OFFSET= $FAKE_UT_OFFSET"
+set QUESTCTL_OPTION = ""
+
+if ( $FAKE_TELESCOPE ) then
+  set FAKE_OPTION = "-f -t $FAKE_UT_OFFSET"
+  set QUESTCTL_OPTION = "$QUESTCTL_OPTION -f -t $FAKE_UT_OFFSET"
+else
+  set FAKE_OPTION = ""
+endif
+
+set 
+
+if ( ! $?OVERRIDE_DOME ) then
+   echo "OVERRIDE_DOME is not a defined environment variable"
+   exit -1
+endif
+
+if ( $OVERRIDE_DOME ) then
+  set QUESTCTL_OPTION = "$QUESTCTL_OPTION -o "
+endif
+
+echo "QUESTCTL_OPTION is $QUESTCTL_OPTION"
+
+set DOME_DAEMON_ON = 1
+set COMMAND_FILE = "$LOG_DIR/dome_daemon.command"
+#
+# seconds to wait after sundown before starting questctl and dome_daemon.
+# This gives time for darks
+set STARTUP_DELAY = 900
+#
+# slay questctl, dome_daemon, and status_daemon
+cd $LS4_ROOT/logs    
+set l = `ps -aef | grep "questctl" | grep -ve "grep" | grep -ve "start"`
+if ( $#l > 0 ) then
+   kill -9 $l[2]
+endif
+set l = `ps -aef | grep "dome_daemon" | grep -ve "grep" | grep -ve "start"`
+if ( $#l > 0 ) then
+   kill -9 $l[2]
+endif
+set l = `ps -aef | grep "status_daemon" | grep -ve "grep" | grep -ve "start"`
+if ( $#l > 0 ) then
+   kill -9 $l[2]
+endif
+set l = `ps -aef | grep "tcs_talk_srv.pl" | grep -ve "grep" | grep -ve "start"`
+if ( $#l > 0 ) then
+   kill -9 $l[2]
+endif
+set l = `ps -aef | grep "weather_srv.pl" | grep -ve "grep" | grep -ve "start"`
+if ( $#l > 0 ) then
+   kill -9 $l[2]
+endif
+#
+# start tcs_talk server
+echo `date` " start_questctl: Starting tcs_talk_srv.pl" 
+$LS4_ROOT/bin/tcs_talk_srv.pl >& $LS4_ROOT/logs/tcs_talk_srv.log &
+#
+# start status Daemon
+echo `date` " start_questctl: Starting status_daemon.csh" 
+$LS4_ROOT/bin/status_daemon.csh >& $LOG_DIR/status_daemon.out &
+#
+# start weather Daemon
+echo `date` " start_questctl: Starting weather server"
+$LS4_ROOT/bin/start_weather_server >& $LOG_DIR/start_weather_srv.out &
+
+#
+cd $LS4_ROOT/logs
+#
+# initialize dome_daemon command to "CLOSE". This prevents
+# dome_daemon from opening the dome until an open command comes
+# from the lasilla_quest.html control page. "OPEN" would
+# allow the dome_daemon to open the dome automatically once the
+# sun goes down and the other domes are open.
+#
+#echo "OPEN " `date -u ` " " `date +"%s"` >! $COMMAND_FILE
+echo "CLOSE " `date -u ` " " `date +"%s"` >! $COMMAND_FILE
+#
+# if sun is up, wait until it goes down and then wait
+# and extra STARTUP_DELAY before starting questctl and 
+# dome daemon
+#
+echo `date` " start_questctl: waiting for sundown" 
+sunup $FAKE_OPTION >& sunup.tmp
+set sunup_is_up = `tail -n 1 sunup.tmp`
+if ( $sunup_is_up == 1  && $FAKE_TELESCOPE == 0) then
+
+    while ( $sunup_is_up == 1  && $FAKE_TELESCOPE == 0)
+      echo `date ` " sun still up"
+      sleep 120
+      sunup $FAKE_OPTION >& sunup.tmp
+      set sunup_is_up = `tail -n 1 sunup.tmp`
+    end
+#
+# now sun is down
+# wait STARTUP_DELAY seconds
+    echo `date` " start_questctl: sun is up. Waiting $STARTUP_DELAY seconds..."
+    sleep $STARTUP_DELAY
+
+endif
+#
+echo `date` " start_questctl: Starting questctl" 
+set d = `date +"%Y%m%d%H%M%S"`
+echo "$LS4_ROOT/bin/questctl $QUESTCTL_OPTION  >& questctl.$d.log &"
+$LS4_ROOT/bin/questctl $QUESTCTL_OPTION  >& questctl.$d.log &
+sleep 5
+if ( $DOME_DAEMON_ON == 1 ) then
+  echo `date` " start_questctl: Starting dome_daemon.csh" 
+  $LS4_ROOT/bin/dome_daemon.csh >& $LOG_DIR/dome_daemon.out & 
+  sleep 5
+else
+  echo `date` " start_questctl: Skipping start of dome_daemon.csh" 
+endif
+echo `date` " start_questctl: done" 
+
