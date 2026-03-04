@@ -49,3 +49,5 @@ util/tcs_test
 util/old_tcs_talk/get_status
 
 util/weather_srv/date_to_time
+
+.DS_Store
