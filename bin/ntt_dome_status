@@ -130,8 +130,11 @@ if ( $dt > $DATE_TOLERANCE ) then
    exit
 endif
 
-if ( $ntt_status == "OPEN" && $twoptwo_status == "OPEN" ) then
-  echo "$date $weather_state $OPEN"
+# this works only if the 2.2m status is being reported (may be unreliable)
+#if ( $ntt_status == "OPEN" && $twoptwo_status == "OPEN" ) then
+#  echo "$date $weather_state OPEN"
+if ( $ntt_status == "OPEN" ) then
+  echo "$date $weather_state OPEN"
 else if ($ntt_status == "CLOSED" && $twoptwo_status == "CLOSED" ) then
   echo "$date $weather_state CLOSED"
 else
