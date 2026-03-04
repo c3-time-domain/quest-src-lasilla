@@ -32,9 +32,10 @@
 #include <telescope_controller.h>
 #define COM_PORT 1 /* com_port that TCU used for externa commands */
 #define POINT_TIMEOUT 300 /* timeout in seconds for pointing the telescope */
+#define SERVER_NAME "ls4-workstn"
 
 int main(int argc, char *argv[]) {
-    telescope_controller* telescope = new telescope_controller(COM_PORT,POINT_TIMEOUT);
+    telescope_controller* telescope = new telescope_controller(COM_PORT,POINT_TIMEOUT,SERVER_NAME);
 
     int status = telescope->take_control();
     switch (status) {

@@ -54,20 +54,81 @@ telescope_controller::telescope_controller(void) {
     strcpy(class_name, "telescope_controller");
     current_position.ra = current_position.dec = 0.0;
     pos_lon = pos_lat = 0.0;
+    ut_offset=0;
 
 }
 
 /**************************************************************************/
 //
 // port is the comport number (1 or 2) used by the TCS computer for communication
-// timout is the timeout in seconds for a telescope move
-telescope_controller::telescope_controller(int port, int timeout) {
+// timout is the timeout in seconds for a telescope move.
+// srv_name is the name or ip number of the machine hosting the telescope server.
+telescope_controller::telescope_controller(int port, int timeout, char *srv_name) {
+
+    double ut_offset = 0.0;
+    init_telescope_controller(port,timeout,srv_name,ut_offset);
+}
+
+
+/**************************************************************************/
+//
+// port is the comport number (1 or 2) used by the TCS computer for communication
+// timout is the timeout in seconds for a telescope move.
+// srv_name is the name or ip number of the machine hosting the telescope server.
+// ut_offset is add to the current UT for simulated observations
+
+telescope_controller::telescope_controller(int port, int timeout, char *srv_name,
+double ut_offset) {
+
+    init_telescope_controller(port,timeout,srv_name,ut_offset);
+}
+
+/**************************************************************************/
+//
+// port is the comport number (1 or 2) used by the TCS computer for communication
+// timout is the timeout in seconds for a telescope move.
+// srv_name is the name or ip number of the machine hosting the telescope server.
+// ut_offset is add to the current UT for simulated observations
+
+void telescope_controller::init_telescope_controller(int port, int timeout, char *srv_name, double fake_ut_offset) {
     class_name = new char[21];
+    server_name = new char[1024];
     strcpy(class_name, "telescope_controller");
+    strcpy(server_name,srv_name);
     current_position.ra = current_position.dec = 0.0;
     pos_lon = pos_lat = 0.0;
+    ut_offset = fake_ut_offset;
     com_port=port;
     point_timeout = timeout;
+    weather_client =  new char[1024];
+    weather_file = new char[1024];
+    tcs_prog_name = new char[1024];
+    tcs_status_file = new char[1024];
+   
+    if  (getenv(WEATHER_FILE) != NULL) 
+      strcpy(weather_file,getenv(WEATHER_FILE));
+    else
+      strcpy(weather_file,DEFAULT_WEATHER_FILE);
+   
+    if  (getenv(WEATHER_CLIENT) != NULL) 
+      strcpy(weather_client,getenv(WEATHER_CLIENT));
+    else
+      strcpy(weather_client,DEFAULT_WEATHER_CLIENT);
+   
+    if  (getenv(TCS_PROG_NAME) != NULL) 
+      strcpy(tcs_prog_name,getenv(TCS_PROG_NAME));
+
+    else
+      strcpy(tcs_prog_name,DEFAULT_TCS_PROG_NAME);
+
+    fprintf(stderr,"telescope_controller: tcs_prog_name: %s\n",tcs_prog_name);
+   
+    if  (getenv(TCS_STATUS_FILE) != NULL) 
+      strcpy(tcs_status_file,getenv(TCS_STATUS_FILE));
+    else
+      strcpy(tcs_status_file,DEFAULT_TCS_STATUS_FILE);
+   
+    fprintf(stderr,"telescope_controller: tcs_status_file: %s\n",tcs_status_file);
     /*fprintf(stderr,"telescope_controller::telescope_controller: com_port = %d\n",com_port);*/
 
 }
@@ -303,6 +364,8 @@ int telescope_controller::initialize(site *tm_site) {
        return 0;
     }
     fprintf(stderr,"telescope_controller:initialize: com_port is %d\n",com_port);
+    strcpy(server_name,tm_site->server_name());
+    fprintf(stderr,"telescope_controller:initialize: server name is %s\n",server_name);
 
     // take control of telescope
     if (take_control() != 0) {
@@ -320,7 +383,7 @@ int telescope_controller::initialize(site *tm_site) {
     // sync TCS computer time to host computer time
     if(tm_site->sync_time_on()){
        struct tm tm;
-       get_date_time(&tm);
+       get_date_time(&tm, ut_offset);
        if (set_telescope_time(&tm) != 0) {
            fprintf(stderr, "%s: unable to set telescope time\n", class_name);
            cmd_response = -1;
@@ -1473,7 +1536,7 @@ telescope_controller::wait_move() {
     char my_name[1024] = "telescope_controller::wait_move";
 
     int my_status = TELESCOPE_SLEWING;
-    t1 = neat_gettime_utc();
+    t1 = neat_gettime_utc(ut_offset);
  
     while (my_status == TELESCOPE_SLEWING || my_status == TELESCOPE_DOME_MOVING) {
 
@@ -1485,7 +1548,7 @@ telescope_controller::wait_move() {
 
         // check to see if point timeout has been reached and we have not
         // yet reach our point
-        t2=neat_gettime_utc();
+        t2=neat_gettime_utc(ut_offset);
         if (t2-t1 > point_timeout) {
             fprintf(stderr, "%s: telescope not reaching position\n", my_name);
             return -1;
@@ -1664,6 +1727,10 @@ int telescope_controller::set_focus(const double new_focus_position) {
 
     min_fcs_mm=convert_focus_to_mm(MIN_FCS);
     max_fcs_mm=convert_focus_to_mm(MAX_FCS);
+    if(VERBOSE){
+        fprintf(stderr,"%s: min/max focus values  are %d %d steps\n",class_name,MIN_FCS,MAX_FCS);
+        fprintf(stderr,"%s: min/max focus values  are %12.6f %12.6f mm\n",class_name,min_fcs_mm, max_fcs_mm);
+    }
 
     // always try to take control (because you may not have it)
     cmd_response = take_control();
@@ -1680,7 +1747,7 @@ int telescope_controller::set_focus(const double new_focus_position) {
         return -1;
     }
     if(VERBOSE){
-        fprintf(stderr,"%s: current focus is %12.6f\n",class_name,current_focus);
+        fprintf(stderr,"%s: current focus is %12.6f mm\n",class_name,current_focus);
     }
 
     // set focus position
@@ -1766,15 +1833,16 @@ int telescope_controller::fault_status() {
     }
        
     if (stat_req(0,cur_stat) == -1) {
-	fprintf(stderr, "%s:  status request failed\n", class_name);
-	fault_code = comm_fault;
-	return fault_code;
+        fprintf(stderr, "%s:  status request failed\n", class_name);
+        fault_code = comm_fault;
+        return fault_code;
     }
 
     if(VERBOSE){
         cerr << "fault_status: checking ra limit " << endl;
         fflush(stderr);
     }
+
     index=ra_limit_mode;
     ra_status=(limit_status_value)cur_stat.mode[index];
     if(ra_status==in_limit) {
@@ -2085,31 +2153,38 @@ struct weather_data telescope_controller::get_weather_data() {
 
     // stuff it with known bad values
     dummy_load_weather(&current_data);
-
+    current_data.temp=0.0;
+// DEBUG
+// skip weather check
+#if 0
     // run system command to get La Silla dome status and write result to temporary file
-    sprintf (string,"echo ERROR >& %s",WEATHER_FILE);
+    sprintf (string,"echo ERROR >& %s",weather_file);
+    fprintf(stderr,"get_weather_data: executing [%s]\n",string);
     system (string);
 
     // create system string for getting weather info. This is a command
-    // to echo an "s" character to the WEATHER_CLIENT perl script and pipe
+    // to echo an "s" character to the weather_client perl script and pipe
     // the output to a temporary file. The temporary files has the
     // weather info (currently only the dome status of the NTT and 2.2 m
     // telescopes at La Silla)
 
-    sprintf(string,"echo s | %s >& %s",WEATHER_CLIENT,WEATHER_FILE);
+    sprintf(string,"echo s | %s >& %s",weather_client,weather_file);
+    fprintf(stderr,"get_weather_data: executing [%s]\n",string);
     system (string);
 
     // read the result from the temporary file
-    input=fopen(WEATHER_FILE,"r");
+    fprintf(stderr,"get_weather_data: opening [%s]\n",weather_file);
+    input=fopen(weather_file,"r");
     if(input==NULL){
-       fprintf(stderr,"%s: could not open file %s\n",class_name,WEATHER_FILE);
+       fprintf(stderr,"%s: could not open file %s\n",class_name,weather_file);
        current_data.humidity = -99.0;   
     }
     else if(fgets(string,1024,input)==NULL){
-       fprintf(stderr,"%s: could not read file %s\n",class_name,WEATHER_FILE);
+       fprintf(stderr,"%s: could not read file %s\n",class_name,weather_file);
        current_data.humidity = -99.0;
     }
     else{
+      fprintf(stderr,"get_weather_data: weathe file line is [%s]\n",string);
        sscanf(string,"%s %lf %lf %lf %lf %lf %lf",
         s,
 	&(current_data.temp),
@@ -2132,7 +2207,7 @@ struct weather_data telescope_controller::get_weather_data() {
        }
     }
     if(input!=NULL)fclose(input);
-
+#endif
     return current_data;
 
 }
@@ -2185,7 +2260,10 @@ char* telescope_controller::sendcmd(telescope_command* command_req) {
         cerr << "sendcmd: sending command " << command_req->get_command_string() << endl;
         fflush(stderr);
     }
-    telescope_io(command_req->get_command_string(),cmd_response);
+    //telescope_io(command_req->get_command_string(),cmd_response, server_name, com_port);
+    fprintf(stderr,"telescope_controller: calling telescop_io with tcs_prog_name [%s] and tcs_status_file[%s]\n",tcs_prog_name, tcs_status_file);
+
+    telescope_io(command_req->get_command_string(),cmd_response, tcs_prog_name, tcs_status_file);
     if(VERBOSE){
         cerr << "sendcmd: done sending command " << command_req->get_command_string() << endl;
         fflush(stderr);
@@ -2568,6 +2646,8 @@ int telescope_controller::set_telescope_time(struct tm *tm) {
     }
     else{
 
+//DEBUG : errors setting date. skip this for now
+#if 0
       /* construct setdate command string */
        tel_cmd = new telescope_command(TELESCOPE_CMD_SETDATE);
        tel_cmd->setup_date(tm);
@@ -2580,11 +2660,11 @@ int telescope_controller::set_telescope_time(struct tm *tm) {
        if (cmd_response != 0) {
           fprintf(stderr, "%s: unable to set date for telescope\n",
 					 class_name);
-	  return cmd_response;
+     	  return cmd_response;
        }
        delete tel_cmd;
        delete tel_cmd_response;
-
+#endif
        /* construct settime command string */
        tel_cmd = new telescope_command(TELESCOPE_CMD_SETTIME);
        tel_cmd->setup_time(tm);

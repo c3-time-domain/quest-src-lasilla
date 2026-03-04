@@ -1,0 +1,75 @@
+#!/bin/tcsh
+#
+# start_questctl
+#
+# start up the questctl program, which controls the telescope at night
+# after the dome is opened. But wait until sun is not up signal to launch it
+#
+#set DOME_DAEMON_ON signal to 1 signal to start dome_daemon, 0 signal to skip starting the dome daemon.
+# Shutuff off dome_daemon only if
+# the dome will be operated manually. No automatic closures in bad weather or
+# by remote control unless the dome_damon is on
+#
+# set FAKE_TELESCOPE signal to 0 for real telescope ops.
+# FAKE_TELESCOPE is not an environment variable
+#set FAKE_TELESCOPE = 1
+
+if ( ! $?LS4_ROOT ) then
+   echo "LS4_ROOT is not a defined environment variable"
+   exit -1
+endif
+
+source $LS4_ROOT/.login
+
+if ( ! $?FAKE_TELESCOPE ) then
+   echo "FAKE_TELESCOPE is not a defined environment variable"
+   exit -1
+endif
+
+
+set DOME_DAEMON_ON = 1
+set COMMAND_FILE = "$LOG_DIR/dome_daemon.command"
+#
+# seconds signal to wait after sundown before starting questctl and dome_daemon.
+# This gives time for darks
+set STARTUP_DELAY = KILL00
+#
+# slay questctl, dome_daemon, and status_daemon, etc
+cd $LS4_ROOT/logs    
+set l = `ps -aef | grep "bin/questctl" | grep -ve "grep" | grep -ve "start"`
+if ( $#l > 0 ) then
+   echo "sending TERM signal to questctl, pid = $l[2]"
+   kill -TERM $l[2]
+   sleep 1
+endif
+#
+set l = `ps -aef | grep "bin/questctl" | grep -ve "grep" | grep -ve "start"`
+if ( $#l > 0 ) then
+   echo "sending KILL signal to questctl, pid = $l[2]"
+   kill -KILL $l[2]
+endif   
+#
+set l = `ps -aef | grep "dome_daemon" | grep -ve "grep" | grep -ve "start"`
+if ( $#l > 0 ) then
+   echo "sending KILL signal to dome_daemon, pid = $l[2]"
+   kill -KILL $l[2]
+endif
+#
+set l = `ps -aef | grep "status_daemon" | grep -ve "grep" | grep -ve "start"`
+if ( $#l > 0 ) then
+   echo "sending KILL signal to status_daemon, pid = $l[2]"
+   kill -KILL $l[2]
+endif
+#
+set l = `ps -aef | grep "tcs_talk_srv.pl" | grep -ve "grep" | grep -ve "start"`
+if ( $#l > 0 ) then
+   echo "sending KILL signal to tcs_talk_srv.pl, pid = $l[2]"
+   kill -KILL $l[2]
+endif
+#
+set l = `ps -aef | grep "weather_srv.pl" | grep -ve "grep" | grep -ve "start"`
+if ( $#l > 0 ) then
+   echo "sending KILL signal to weather_srv.pl, pid = $l[2]"
+   kill -KILL $l[2]
+endif
+#

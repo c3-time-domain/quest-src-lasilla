@@ -11,6 +11,7 @@
 #include <telescope_controller.h>
 #define COM_PORT 1 /* com_port TCS uses to take remote commands */
 #define POINT_TIMEOUT 300 /* timeout in seconds for pointing the telescope */
+#define SERVER_NAME "ls4-workstn"
 
 
 // Usage print out if you don't put in a focus offset at the command line
@@ -28,7 +29,7 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
-	tcu = new telescope_controller(COM_PORT,POINT_TIMEOUT);
+	tcu = new telescope_controller(COM_PORT,POINT_TIMEOUT,SERVER_NAME);
 	offset = tcu->get_focus();
 
 	cerr << "current focus setting is " << offset << endl;

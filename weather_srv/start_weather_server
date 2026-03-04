@@ -1,0 +1,14 @@
+#!/bin/tcsh
+#
+# kill and restart weather_srv.pl
+# weather_srv.pl is a server that takes socket commands to
+# determine the dome status of the La Silla domes
+#
+slay weather_srv.pl
+cd $LS4_ROOT/logs
+echo `date` >>& weather_srv.out
+echo "restarting weather server" >> weather_srv.out
+$LS4_ROOT/bin/weather_srv.pl >>& weather_srv.out &
+sleep 1
+echo "s" | $LS4_ROOT/bin/weather_client.pl
+#

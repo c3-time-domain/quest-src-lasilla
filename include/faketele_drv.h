@@ -24,7 +24,7 @@
 
 /* EXTERN int telescope_open(void); */
 EXTERN int telescope_open(char*);
-EXTERN int telescope_io(int fd, int cmd, char *cmd_string);
+EXTERN int telescope_io(int fd, int cmd, char *cmd_string, char *servername, int server_port);
 EXTERN int telescope_close(int serial_fd);
 
 /*  Serial port device file name */

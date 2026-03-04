@@ -1,18 +1,34 @@
-mkdir /home/observer
-mkdir /home/observer/logs
-mkdir /home/observer/bin
-install quest-src-lasilla at /home/observer
-cd quest-src-lasilla
-cd lib
-make clean
+#!/bin/tcsh
+
+set root = `pwd`
+cd $root
+if ( -e bin ) rm -rf bin
+mkdir bin
+cd $root
+cd $root/lib
 make all
-cd ../prog
+cd $root/prog
 make clean
 make all
 make install
-cd ../util
-cp *csh /home/observer/bin
+cd $root/util 
+cp * $root/bin
 # these perl files are probably obsolete
-cp *pl /home/observer/bin
+cp *pl $root/bin
+cd $root/tcs_talk
+make clean
+make all
+make install
+cd $root
+cd weather_srv
+make clean
+make all
+make install
+cd status_srv
+make clean
+make all
+make install
+
+
 #
 

@@ -50,7 +50,4 @@ util/old_tcs_talk/get_status
 
 util/weather_srv/date_to_time
 
-# OS generated files #
-######################
 .DS_Store
-.DS_Store?

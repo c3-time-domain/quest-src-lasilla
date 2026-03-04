@@ -15,6 +15,7 @@
 
 #define COM_PORT 1 /* com port used by TCS for external io */
 #define POINT_TIMEOUT 300 /* timeout in seconds for pointing the telescope */
+#define SERVER_NAME "ls4-workstn"
 
 //EXTERN int tel_ctlr_debug;
 //EXTERN int tel_drv_debug;
@@ -49,7 +50,13 @@ int main(int argc, char *argv[]) {
 	}
     }
 
-    tcu = new telescope_controller(COM_PORT,POINT_TIMEOUT);
+    char server_name[1024];
+    strcpy(server_name,SERVER_NAME);
+    tcu = NULL;
+    tcu = new telescope_controller(COM_PORT,POINT_TIMEOUT,server_name);
+
+    fprintf(stderr,"domestatus: tcu->tcs_prog_name: %s\n",tcu->tcs_prog_name);
+
     status = tcu->dome_shutter_status();
     char* status_str = new char[128];
     switch(status) {
@@ -78,7 +85,8 @@ int main(int argc, char *argv[]) {
     cerr << "current dome status is: " << status_str << endl;
     cout <<  status_str << endl;
 
-    delete tcu,status_str;
+    delete tcu;
+    delete status_str;
 
     exit(0);
 }

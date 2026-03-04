@@ -17,6 +17,7 @@
 #include <telescope_controller.h>
 #define COM_PORT 1 /* com_port TCS uses to take remote commands */
 #define POINT_TIMEOUT 300 /* timeout in seconds for pointing the telescope */
+#define SERVER_NAME "ls4-workstn"
 
 // Usage print out if you don't put in a focus setting at the command line
 void usage(char *);
@@ -36,7 +37,7 @@ int main(int argc, char *argv[]) {
 
     f_mm = atof(argv[1]);
     cerr << "changing focus to: " << f_mm << endl;
-    tcu = new telescope_controller(COM_PORT,POINT_TIMEOUT);
+    tcu = new telescope_controller(COM_PORT,POINT_TIMEOUT,SERVER_NAME);
     f_steps=tcu->convert_focus_to_steps(f_mm);
     if(f_steps<MIN_FCS||f_steps>MAX_FCS){
         fprintf(stderr,

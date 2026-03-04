@@ -1,0 +1,28 @@
+weather_srv
+DLR 2009 Jul 8
+
+souce scripts and code for the weather server, running on quest16. All
+code must reside in /home/observer/palomar/weather_srv
+
+
+weather_srv.pl : perl script to take socket commands (mostly just the "s" command") and return dome status at La Silla through the socket. It uses wget to read a file called "dome.last" from another machine at La Silla. The script must run on quest16 since that is the only machine on the La Silla network. It reads
+the dome.last file and checks to see if the log time is current, and if the
+dome states for both the NTT and the 2.2-m are open. If so, it returns the
+date and the word "OPEN". If the log time is current, and both domes are
+closed, it returns "CLOSED". If one dome is closed and the other is open, it
+returns "UNCERTAIN". If it can not determine either dome's state, or the
+log time is not current, it returns ERROR.
+
+weather_client.pl : the client perl script that takes a command as standard input (typically "s"), sends it over a socket to the weather_srv.pl server, reads the result back over the socket, and writes it to standard output
+
+weather_srv.cfg :  configuration file for the server or client. It gives  the 
+IP number of the machine running the server, and the socket port number to use
+for communication.
+
+ntt_dome_status: this is a csh script called by weather_srv.pl to run wget
+and interpret the dome.last file
+
+date_to_time.c : a C progam to convert yyyy mm dd hh mm ss to times since
+Jan 1, 1970 00:00:00.  To compile, type "make date_to_time".
+
+

@@ -90,7 +90,7 @@ if ($#ARGV == 0) {
 
 
 while(<STDIN>) {
-        connect_tcs_talk_command_socket;
+    connect_tcs_talk_command_socket();
 	#printf STDERR "client: $_\n";
 	sel_write($tsel);
 	$ret = sel_read($tsel);

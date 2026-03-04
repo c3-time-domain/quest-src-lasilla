@@ -39,6 +39,7 @@
 #define FILTER8 "clear"
 #define COM_PORT 1 /* com_port TCS uses to take remote commands */
 #define POINT_TIMEOUT 300 /* timeout in seconds for pointing the telescope */
+#define SERVER_NAME "ls4-workstn"
 
 int main(int argc, char *argv[]) {
 	telescope_controller *tcu;
@@ -55,7 +56,7 @@ int main(int argc, char *argv[]) {
         strcpy(filter+(FILTER_NAME_LENGTH*6),FILTER7);
         strcpy(filter+(FILTER_NAME_LENGTH*7),FILTER8);
 
-	tcu = new telescope_controller(COM_PORT,POINT_TIMEOUT);
+	tcu = new telescope_controller(COM_PORT,POINT_TIMEOUT,SERVER_NAME);
         filter_id=tcu->get_filter();
         if (filter_id==-1){
             printf("%s: couldn't get filter id", "getfocus");
